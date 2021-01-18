@@ -1,6 +1,7 @@
 import UIKit
 import WMF
 import CocoaLumberjackSwift
+import UserzoomSDK
 
 @objc(WMFArticleViewController)
 class ArticleViewController: ViewController, HintPresenting {
@@ -354,6 +355,8 @@ class ArticleViewController: ViewController, HintPresenting {
             self.navigationItem.backButtonTitle = articleURL.wmf_title
             self.navigationItem.backButtonDisplayMode = .generic
         }
+        
+        UserzoomSDK.show("UZ_TAG_SPECIFIC")
     }
     
     override func viewWillAppear(_ animated: Bool) {

@@ -64,7 +64,9 @@ xcbaselines/
 # We're committing the Pods folder in order to facilitate setup
 # and have repeatable builds (each commit is a snapshot of our dependencies)
 #
-# Pods/
+Pods/
+Podfile.lock
+Gemfile.lock
 
 # www
 node_modules/
@@ -78,3 +80,4 @@ Cartfile.hash
 
 fastlane/snapshot_derived_data/
 WikipediaUITests/Snapshots/
+

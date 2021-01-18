@@ -7,6 +7,7 @@
 #import "UIApplicationShortcutItem+WMFShortcutItem.h"
 #import "Wikipedia-Swift.h"
 #import "WMFQuoteMacros.h"
+@import UserzoomSDK;
 
 static NSTimeInterval const WMFBackgroundFetchInterval = 10800; // 3 Hours
 static NSString *const WMFBackgroundAppRefreshTaskIdentifier = @"org.wikimedia.wikipedia.appRefresh";
@@ -87,6 +88,7 @@ static NSString *const WMFBackgroundAppRefreshTaskIdentifier = @"org.wikimedia.w
 
     [self updateDynamicIconShortcutItems];
 
+    [UserzoomSDK initWithTag:@"UZ_TAG_INIT" options: launchOptions];
     return YES;
 }
 
@@ -164,6 +166,7 @@ static NSString *const WMFBackgroundAppRefreshTaskIdentifier = @"org.wikimedia.w
             openURL:(NSURL *)url
             options:(NSDictionary<NSString *, id> *)options {
     NSUserActivity *activity = [NSUserActivity wmf_activityForWikipediaScheme:url] ?: [NSUserActivity wmf_activityForURL:url];
+    [UserzoomSDK openURL: url];
     if (activity) {
         [self.appViewController showSplashView];
         BOOL result = [self.appViewController processUserActivity:activity

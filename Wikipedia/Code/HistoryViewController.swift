@@ -1,5 +1,6 @@
 import UIKit
 import WMF
+import UserzoomSDK
 
 @objc(WMFHistoryViewController)
 class HistoryViewController: ArticleFetchedResultsViewController {
@@ -30,6 +31,7 @@ class HistoryViewController: ArticleFetchedResultsViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        UserzoomSDK.blockRecord(true);
         collectionViewUpdater.isGranularUpdatingEnabled = true
 
         /// Terrible hack to make back button text appropriate for iOS 14 - need to set the title on `WMFAppViewController`. For all app tabs, this is set in `viewWillAppear`.
@@ -43,6 +45,7 @@ class HistoryViewController: ArticleFetchedResultsViewController {
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
+        UserzoomSDK.blockRecord(false);
         collectionViewUpdater.isGranularUpdatingEnabled = false
     }
     
