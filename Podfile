@@ -5,7 +5,7 @@ use_frameworks!
 
 abstract_target 'UZ' do
   #UserZoom SDK
-  pod 'UserzoomSDK', :git => 'git@github.com:UserZoomDev/UserzoomSDK-iOS.git'
+  pod 'UserzoomSDK', :git => 'git@github.com:UserZoom/UserzoomSDK-iOS.git'
 
   target 'Wikipedia' do
   end
