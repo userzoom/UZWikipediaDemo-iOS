@@ -10732,7 +10732,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$SRCROOT/scripts/localization\" \"$SRCROOT\"\n";
+			shellScript = "#\"$SRCROOT/scripts/localization\" \"$SRCROOT\"\n";
 			showEnvVarsInLog = 0;
 		};
 		D8A1B5EC1FACFD0D007773F8 /* Page Library Development */ = {
