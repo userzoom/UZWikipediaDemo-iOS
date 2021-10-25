@@ -104,6 +104,18 @@ enum APIReadingListRequestType: String {
     case setup, teardown
 }
 
+/* Note that because the reading list API does not support language variants,
+ * the articleURL will always have a nil language variant.
+ *
+ * The RemoteReadingListArticleKey type is a type alias for String.
+ * Since ReadingListsSyncOperation handles remote entries that don't have a variant,
+ * and local entries that do have a variant, this type makes it more clear when
+ * a non-variant aware key is being used.
+ *
+ * Also, if the remote API adds variant support, it should be straightforward to
+ * update the type alias from String to WMFInMemoryURLKey.
+*/
+typealias RemoteReadingListArticleKey = String
 extension APIReadingListEntry {
     var articleURL: URL? {
         guard let site = URL(string: project) else {
@@ -112,19 +124,19 @@ extension APIReadingListEntry {
         return site.wmf_URL(withTitle: title)
     }
     
-    var articleKey: String? {
+    var articleKey: RemoteReadingListArticleKey? {
         return articleURL?.wmf_databaseKey
     }
 }
 
 class ReadingListsAPIController: Fetcher {
-    private let api = Configuration.current.pageContentServiceAPIURLComponentsBuilderFactory("en.wikipedia.org")
+    private let builder = Configuration.current.pageContentServiceBuilder(withWikiHost: "en.wikipedia.org")
     private let basePathComponents = ["data", "lists"]
     public var lastRequestType: APIReadingListRequestType?
 
     fileprivate func get<T: Codable>(path: [String], queryParameters: [String: Any]? = nil, completionHandler: @escaping (T?, URLResponse?, Error?) -> Swift.Void) {
         let key = UUID().uuidString
-        let components = api.components(byAppending: basePathComponents + path, queryParameters: queryParameters)
+        let components = builder.components(byAppending: basePathComponents + path, queryParameters: queryParameters)
         guard
             let task = session.jsonDecodableTaskWithDecodableError(with: components.url, method: .get, completionHandler: { (result: T?, errorResult: APIReadingListErrorResponse?, response, error) in
             if let errorResult = errorResult, let error = APIReadingListError(rawValue: errorResult.title) {
@@ -141,7 +153,7 @@ class ReadingListsAPIController: Fetcher {
     }
     
     fileprivate func requestWithCSRF(path: [String], method: Session.Request.Method, bodyParameters: [String: Any]? = nil, completion: @escaping ([String: Any]?, URLResponse?, Error?) -> Void) {
-        let components = api.components(byAppending: basePathComponents + path)
+        let components = builder.components(byAppending: basePathComponents + path)
         requestMediaWikiAPIAuthToken(for: components.url, type: .csrf) { (result) in
             switch result {
             case .failure(let error):

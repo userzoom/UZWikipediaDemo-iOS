@@ -161,8 +161,6 @@
 "main-menu-account-logout-are-you-sure" = "Is u seker u wil uitteken?";
 "main-menu-account-logout-cancel" = "Kanselleer";
 "main-menu-account-title-logged-in" = "Aangeteken as $1";
-"main-menu-debug-tweaks" = "Ontwikkelaarinstellings";
-"main-menu-heading-debug" = "Ontfout";
 "main-menu-heading-legal" = "Privaatheid en Voorwaardes";
 "main-menu-nearby" = "Naby";
 "main-menu-privacy-policy" = "Privaatheidsbeleid";
@@ -208,7 +206,6 @@
 "readers-accessibility-label" = "$1 lesers";
 "reading-list-limit-hit-for-unsorted-articles-button-title" = "Sorteer artikels";
 "reference-title" = "Verwysing $1";
-"request-feedback-on-error" = "Die toep het ’n probleem ervaar waarvan ons ontwikkelaars meer wil weet. Tik hier om aan ons ’n e-pos met die foutbesonderhede te stuur.";
 "saved-reading-lists-title" = "Leeslyste";
 // Fuzzy
 "saved-search-default-text" = "Soek";

@@ -212,8 +212,6 @@
 "main-menu-account-logout-are-you-sure" = "Tebɣiḍ ad teffɣed?";
 "main-menu-account-logout-cancel" = "Sefsex";
 "main-menu-account-title-logged-in" = "Yeqqen s yisem $1";
-"main-menu-debug-tweaks" = "Iɣewwaṛen n uneflay";
-"main-menu-heading-debug" = "Tamseɣtayt";
 "main-menu-heading-legal" = "Tabaḍnit d tiwtilin";
 "main-menu-nearby" = "S lqeṛban";
 "main-menu-privacy-policy" = "Tasertit n tbaḍnit";
@@ -289,7 +287,6 @@
 "relative-date-minutes-ago" = "{{PLURAL:$1|0=tura kan|$1 n tesdat|$1 n tisdatin aya}}";
 // Fuzzy
 "relative-date-years-ago" = "{{PLURAL:$1|0=Aseggas-a|Aseggas yezrin|$1 n useggas aya}}";
-"request-feedback-on-error" = "Asnas yemmuger-d ugur anida ineflayen-nneɣ ad bɣan ad ẓren ugar fell-as. Nnal dagi akken aɣ-d-azneḍ imayl s telqayt ɣef tuccḍa.";
 "saved-pages-image-download-error" = "Ur izmir ara ad d-isali tugniwin n usebter-agi yettwaskelsen.";
 "saved-title" = "Yettwasekles";
 "search-button-accessibility-label" = "Nadi di Wikipedia";

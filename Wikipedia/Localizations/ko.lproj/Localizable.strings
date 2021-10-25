@@ -1,12 +1,13 @@
 // Messages for Korean (한국어)
 // Exported from translatewiki.net
-// Author: Abijeet Patro
 // Author: Alex00728
+// Author: Apzp79
 // Author: Bluemersen
 // Author: CYAN
 // Author: Codenstory
 // Author: Doyoon1995
 // Author: Eduardo Addad de Oliveira
+// Author: Eduardoaddad
 // Author: Ellif
 // Author: Garam
 // Author: HDNua
@@ -21,6 +22,7 @@
 // Author: Priviet
 // Author: Revi
 // Author: SeoJeongHo
+// Author: Tsevener
 // Author: Twotwo2019
 // Author: Viral
 // Author: Ykhwong
@@ -33,7 +35,7 @@
 // Author: 아라
 
 "aaald-added-text-description-2" = "$1 추가됨";
-"aaald-article-description-updated-description" = "글의 제목 설명이 업데이트됨";
+"aaald-article-description-updated-description" = "문서 설명이 업데이트됨";
 "aaald-article-insert-header" = "중요 업데이트";
 "aaald-article-insert-last-updated" = "최근 업데이트";
 "aaald-article-insert-new-changes" = "새 변경사항";
@@ -49,9 +51,11 @@
 "aaald-new-discussion" = "새 토론";
 "aaald-new-journal-reference-database" = "$1을(를) 통해";
 "aaald-new-journal-reference-title" = "저널";
+"aaald-new-journal-reference-volume" = "$1권:";
 "aaald-new-news-reference-retrieved-date" = "$1에 검색함";
 "aaald-new-news-reference-title" = "뉴스";
 "aaald-new-talk-topic-description-format" = "이 문서의 $1";
+"aaald-new-website-reference-archive-date-text" = "$1에 원본에서 가져옴";
 "aaald-new-website-reference-archive-url-text" = "Archive.org URL";
 "aaald-new-website-reference-title" = "웹사이트";
 "aaald-numerical-multiple-references-added-description" = "{{PLURAL:$1|0=0개 각주|$1개 각주|$1개 각주}} 추가됨";
@@ -59,6 +63,8 @@
 "aaald-revision-by-anonymous" = "익명 사용자의 편집";
 "aaald-revision-userInfo" = "편집자: $1 (편집 $2개)";
 "aaald-single-reference-added-description" = "각주 추가됨";
+"aaald-small-change-description" = "{{PLURAL:$1|0=사소한 편집 없었음|사소한 편집 $1건 있음|사소한 편집 $1건 있음}}";
+"aaald-summary-title" = "{{PLURAL:$3|0=0일 간|$3일 간|$3일 간}} {{PLURAL:$2|0=편집자 0명이|편집자 $2명이|편집자 $2명이}} {{PLURAL:$1|0=0번 변경함|$1번 변경함|$1번 변경함}}";
 "aaald-two-sections-description" = "$1 및 $2 문단에서";
 "aaald-vandalism-revert-description" = "문서 훼손으로 의심되는 판이 되돌려짐";
 "aaald-view-full-history-button" = "모든 문서 역사 보기";
@@ -180,36 +186,41 @@
 "button-skip" = "건너뛰기";
 "cancel" = "취소";
 "cc-zero" = "크리에이티브 커먼즈 CC0";
+"chinese-variants-alert-body" = "이제 위키백과 앱에서 아래에 표기한 여러 종류의 중국어를 주 언어나 보조 언어로 설정할 수 있으며, 이를 통해 선호하는 중국어로 문서의 열람, 검색, 편집 작업을 쉽게 할 수 있습니다.\n\n简体 중국어 간체 (zh-hans)\n香港繁體 홍콩 번체 (zh-hk)\n澳門繁體 마카오 번체 (zh-mo)\n大马简体 말레이시아 간체 (zh-my)\n新加坡简体 싱가포르 간체 (zh-sg)\n臺灣正體 대만 정체 (zh-tw)";
+"chinese-variants-alert-title" = "중국어 변이형 지원 업데이트";
 "clear-title-accessibility-label" = "지우기";
 "close-button-accessibility-label" = "닫기";
 "compass-direction" = "$1시에";
 "continue-reading-empty-description" = "더 많은 문서를 읽기 위해 위키백과 둘러보기";
 "continue-reading-empty-title" = "최근에 읽은 문서 없음";
+"crimean-tatar-variants-alert-body" = "이제 위키백과 앱에서 아래의 크림 타타르어 변이형을 주 언어나 보조 언어로 설정할 수 있으며, 이를 통해 선호하는 변이형으로 문서의 열람, 검색, 편집 작업을 쉽게 할 수 있습니다.\n\nQırımtatarca, Latin 크림 타타르어 라틴 (chr-latn)\nкъырымтатарджа, Кирил 크림 타타르어 키릴 (crh-cyrl)";
+"crimean-tatar-variants-alert-title" = "크림 타타르어 변이형 지원 업데이트";
 "data-migration-status" = "업데이트 중...";
 "description-add-title" = "설명 추가";
-"description-edit-for-article" = "$1의 제목 설명";
+"description-edit-for-article" = "$1의 문서 설명";
 "description-edit-learn-more" = "더 알아보기";
 "description-edit-length-warning" = "$1 / $2";
-"description-edit-license" = "제목 설명을 변경하면 당신은 $1에 동의하며 기여한 내용을 $2 라이선스로 배포하는 데 동의하는 것으로 간주합니다. 이 동의는 철회할 수 없습니다.";
+"description-edit-license" = "문서 설명을 변경하면 당신은 $1에 동의하며 기여한 내용을 $2 라이선스로 배포하는 데 동의하는 것으로 간주합니다. 이 동의는 철회할 수 없습니다.";
 "description-edit-pencil-introduction" = "설명 편집";
-"description-edit-pencil-title" = "제목 설명 편집";
+"description-edit-pencil-title" = "문서 설명 편집";
 "description-edit-placeholder-title" = "설명은 짧을수록 좋습니다";
 "description-edit-publish" = "설명 게시";
 "description-edit-title" = "설명 편집";
 "description-edit-warning" = "사용자가 문서의 주제를 바로 이해할 수 있도록 설명은 간결하게 작성하십시오";
-"description-help-about-description" = "제목 설명은 독자들이 한눈에 주제를 파악할 수 있도록 글을 요약합니다.";
+"description-edit-warning-casing" = "문장 시작이라 하여도, 고유명사만 대문자로 표기해야 합니다.";
+"description-help-about-description" = "문서 설명은 독자들이 한눈에 주제를 파악할 수 있도록 글을 요약합니다.";
 "description-help-about-title" = "정보";
 "description-help-about-wikidata" = "위키데이터 정보";
 "description-help-more-info-description" = "설명은 위키백과와 다른 프로젝트를 지원하는 자유, 협업, 다언어, 2차 데이터베이스를 제공하는 위키미디어 재단의 프로젝트의 하나인 위키데이터에 저장되어 관리됩니다.";
 "description-help-more-info-title" = "자세한 정보";
 "description-help-tips-description" = "설명은 2개에서 12개 사이의 단어 길이의 한 줄에 맞추는 것이 이상적입니다. 처음 오는 단어가 고유 명사가 아니라면 대문자로 쓰지 않습니다.";
-"description-help-tips-example-description-one" = "모나리자에 관한 문서의 제목 설명";
-"description-help-tips-example-description-two" = "에베레스트 산에 관한 문서의 제목 설명";
+"description-help-tips-example-description-one" = "모나리자에 관한 문서의 문서 설명";
+"description-help-tips-example-description-two" = "에베레스트 산에 관한 문서의 문서 설명";
 "description-help-tips-example-title-one" = "레오나르도 다 빈치의 그림";
 "description-help-tips-example-title-two" = "지구상에서 가장 높은 산";
 "description-help-tips-for-example" = "예:";
 "description-help-tips-title" = "설명 작성 팁";
-"description-help-title" = "제목 설명 도움말";
+"description-help-title" = "문서 설명 도움말";
 "description-help-wikidata-guide" = "설명 쓰기에 관한 위키데이터 안내";
 "description-published-button-title" = "완료";
 "description-published-footer" = "이 앱 안에서 문서를 편집할 수도 있습니다. 다음에 연필 아이콘을 클릭하여 오자와 일부 문장을 고쳐보십시오";
@@ -218,7 +229,7 @@
 "description-welcome-concise-sub-title" = "한 줄에, 두 단어에서 열 두 단어가 이상적입니다";
 "description-welcome-concise-title" = "간결한 설명을 추가하십시오";
 "description-welcome-descriptions-sub-title" = "독자들이 한눈에 주제를 파악할 수 있도록 글을 요약합니다";
-"description-welcome-descriptions-title" = "제목 설명";
+"description-welcome-descriptions-title" = "문서 설명";
 "description-welcome-promise-title" = "시작함으로써 나는 이 기능을 오용하지 않을 것을 약속합니다";
 "description-welcome-start-editing-button" = "편집 시작";
 "diff-compare-header-from-info-heading" = "보내는이:";
@@ -328,6 +339,8 @@
 "empty-no-feed-message" = "인터넷 이용이 가능할 때 추천 문서를 읽을 수 있습니다.";
 "empty-no-history-message" = "여기에는 당신이 읽은 문서들이 표시됩니다";
 "empty-no-history-title" = "표시할 역사가 없습니다";
+"empty-no-other-article-languages-message" = "이 문서는 아직 다른 언어로 작성되지 않았습니다";
+"empty-no-other-article-languages-title" = "사용 가능한 다른 언어 없음";
 "empty-no-reading-lists-message" = "여행 갈 장소, 좋아하는 주제 등을 위한 목록을 만드세요";
 "empty-no-reading-lists-title" = "저장된 문서를 읽기 목록으로 정리합니다";
 "empty-no-saved-pages-in-reading-list-message" = "여기에 문서를 표시하려면 문서를 이 목록에 저장하세요";
@@ -423,6 +436,12 @@
 "explore-random-article-sub-heading-from-wikipedia" = "위키백과에서";
 "explore-randomizer" = "임의의 문서 보기";
 "featured-article-empty-title" = "오늘 볼 수 있는 알찬 글 없음";
+"featured-widget-content-failure-for-date" = "알찬 글은 현재 날짜 기준으로 사용할 수 없습니다.";
+"featured-widget-description" = "우리 공동체가 날마다 선정하는 위키백과 최고의 문서를 찾아보세요.";
+"featured-widget-from-language-wikipedia" = "$1 위키백과에서";
+"featured-widget-from-wikipedia" = "위키백과에서";
+"featured-widget-language-failure" = "주 위키백과 언어가 알찬 글을 지원하지 않습니다. 앱의 설정 메뉴에서 주 위키백과를 업데이트할 수 있습니다.";
+"featured-widget-title" = "알찬 글";
 "feed-news-notification-button-text" = "알림 켜기";
 "feed-news-notification-text" = "위키백과 문서의 소식 동향이 있을 경우에 알림을 받을 수 있습니다.";
 "fetcher-error-generic" = "무언가가 잘못되었습니다. 나중에 다시 시도해 주십시오.";
@@ -460,6 +479,8 @@
 "forgot-password-instructions" = "이메일을 통해 암호 재설정 지시사항을 받으려면 아래의 필드 중 하나를 채우십시오";
 "forgot-password-title" = "비밀번호 재설정";
 "forgot-password-username-or-email-title" = "또는";
+"gan-variants-alert-body" = "이제 위키백과 앱에서 아래의 간어 변이형을 주 언어나 보조 언어로 설정할 수 있으며, 이를 통해 선호하는 변이형으로 문서의 열람, 검색, 편집 작업을 쉽게 할 수 있습니다.\n\n贛語 原文 간어 (gan)\n赣语 简体 간어 간체 (gan-hans)\n贛語 繁體 간어 번체 (gan-hant)";
+"gan-variants-alert-title" = "간어 변이형 지원 업데이트";
 "history-clear-all" = "지우기";
 "history-clear-cancel" = "취소";
 "history-clear-confirmation-heading" = "최근의 모든 항목을 삭제하겠습니까?";
@@ -521,6 +542,12 @@
 "intermediate-edits-editors-count-limited" = "$2명 이상의 중간 판 $1개 이상은 보이지 않습니다";
 "intermediate-edits-editors-limited-count" = "$2명 이상의 {{PLURAL:$1|중간 판 $1개 이상}}은 보이지 않습니다";
 "intermediate-edits-limited-editors-count" = "{{PLURAL:$2|$2명}}의 중간 판 $1개는 보이지 않습니다";
+"inuktitut-variants-alert-body" = "이제 위키백과 앱에서 아래의 이누이트어 변이형을 주 언어나 보조 언어로 설정할 수 있으며, 이를 통해 선호하는 변이형으로 문서의 열람, 검색, 편집 작업을 쉽게 할 수 있습니다.\n\nᐃᓄᒃᑎᑐᑦ ᑎᑎᕋᐅᓯᖅ ᓄᑖᖅ 이누이트어 음절문자 (ike-cans)\nInuktitut ilisautik, 이누이트어 라틴 (ike-latn)";
+"inuktitut-variants-alert-title" = "이누이트어 변이형 지원 업데이트";
+"kazakh-variants-alert-body" = "이제 위키백과 앱에서 아래의 카자흐어 변이형을 주 언어나 보조 언어로 설정할 수 있으며, 이를 통해 선호하는 변이형으로 문서의 열람, 검색, 편집 작업을 쉽게 할 수 있습니다.\n\nҚазақша 카자흐어 (kk)\nҚазақша Кирил 카자흐어 키릴 (kk-cyrl)\nqazaqşa latin 카자흐어 라틴 (kk-latn)\nتوتە قازاقشا 카자흐어 아랍 (kk-arab)";
+"kazakh-variants-alert-title" = "카자흐어 변이형 지원 업데이트";
+"kurdish-variants-alert-body" = "이제 위키백과 앱에서 아래의 쿠르드어 변이형을 주 언어나 보조 언어로 설정할 수 있으며, 이를 통해 선호하는 변이형으로 문서의 열람, 검색, 편집 작업을 쉽게 할 수 있습니다.\n\nKurdî Latînî 쿠르드어 라틴 (ku-latn)\nكوردی 쿠르드어 아랍 (kk-arab)";
+"kurdish-variants-alert-title" = "쿠르드어 변이형 지원 업데이트";
 "languages-settings-title" = "언어";
 "languages-title" = "언어 변경";
 "languages-wikipedia" = "위키백과 언어";
@@ -538,8 +565,6 @@
 "main-menu-account-logout-are-you-sure" = "로그아웃하시겠습니까?";
 "main-menu-account-logout-cancel" = "취소";
 "main-menu-account-title-logged-in" = "$1님으로 로그인됨";
-"main-menu-debug-tweaks" = "개발자용 설정";
-"main-menu-heading-debug" = "디버그";
 "main-menu-heading-legal" = "개인정보 및 약관";
 "main-menu-nearby" = "근처";
 "main-menu-privacy-policy" = "개인정보보호정책";
@@ -568,6 +593,9 @@
 "on-this-day-detail-header-date-range" = "$1 - $2 사이";
 "on-this-day-detail-header-title" = "{{PLURAL:$1|$1개의 역사적 사건}}";
 "on-this-day-footer" = "이 날에 있었던 더 많은 역사적 사건";
+"on-this-day-footer-showing-event-count" = "오늘의 역사 {{PLURAL:$1|$1건 더보기|$1건 더보기}}";
+"on-this-day-language-does-not-support-error" = "주 위키백과 언어가 오늘의 역사를 지원하지 않습니다. 앱의 설정 메뉴에서 주 위키백과를 업데이트할 수 있습니다.";
+"on-this-day-no-internet-error" = "이용 가능한 데이터 없음";
 "on-this-day-sub-title-for-date-from-language-wikipedia" = "$2 위키백과에서 $1";
 "on-this-day-title" = "오늘의 역사";
 "original-tab-button-popover-description" = "시작한 탭으로 돌아가려면 'W'를 탭하세요";
@@ -632,6 +660,8 @@
 "places-unknown-distance" = "알 수 없는 거리";
 "potd-description-prefix" = "$1의 그림";
 "potd-empty-error-description" = "$1의 사진 가져오기 실패";
+"potd-widget-description" = "우리 공동체가 선정한 하루하루의 아름다운 사진을 즐기세요.";
+"potd-widget-title" = "오늘의 사진";
 "preference-summary-eventlogging-opt-in" = "당신이 어떻게 앱을 사용하는지에 대한 정보를 모으도록 허용합니다. 보내주신 정보는 위키미디어 재단이 앱을 개선하는 데 도움이 됩니다.";
 "preference-title-eventlogging-opt-in" = "사용 보고서 보내기";
 "rank-accessibility-label" = "$1번";
@@ -738,7 +768,6 @@
 "replace-replace-all-results-count" = "{{PLURAL:$1|항목 $1개 치환됨}}";
 "replace-textfield-accessibility" = "바꾸기";
 "replace-textfield-placeholder" = "다음으로 바꾸기...";
-"request-feedback-on-error" = "이 앱은 우리 개발자들이 관심이 있는 문제를 마주쳤습니다. 여기를 탭하여 자세한 오류 설명과 함께 이메일을 저희에게 보내 주세요.";
 "reverted-edit-back-to-article-button-title" = "문서로 돌아가기";
 "reverted-edit-notification-body" = "$1 문서에 한 편집은 $2님에 의해 되돌려졌습니다";
 "reverted-edit-notification-read-more-action-title" = "더 읽어보기";
@@ -769,6 +798,8 @@
 "search-recent-title" = "최근 검색한 항목";
 "search-result-redirected-from" = "($1에서 넘어옴)";
 "search-title" = "검색";
+"serbian-variants-alert-body" = "이제 위키백과 앱에서 아래의 세르비아어 변이형을 주 언어나 보조 언어로 설정할 수 있으며, 이를 통해 선호하는 변이형으로 문서의 열람, 검색, 편집 작업을 쉽게 할 수 있습니다.\n\nсрпски ћирилица 세르비아어 키릴 (sr-ec)\nsrpski latinica 세르비아어 라틴 (sr-el)";
+"serbian-variants-alert-title" = "세르비아어 변이형 지원 업데이트";
 "settings-account" = "계정";
 "settings-appearance" = "읽기 환경 설정";
 "settings-clear-cache" = "캐시된 데이터 지우기";
@@ -827,6 +858,10 @@
 "table-of-contents-heading" = "목차";
 "table-of-contents-hide-button-label" = "목차 숨기기";
 "table-of-contents-subheading-label" = "$1단계 하위 문단";
+"tachelhit-variants-alert-body" = "이제 위키백과 앱에서 아래의 타셸히트어 변이형을 주 언어나 보조 언어로 설정할 수 있으며, 이를 통해 선호하는 변이형으로 문서의 열람, 검색, 편집 작업을 쉽게 할 수 있습니다.\n\nⵜⴰⵛⵍⵃⵉⵜ 타셸히트어 티피나그 (shi-tfng)\nTaclḥit 타셸히트어 라틴 (shi-latn)";
+"tachelhit-variants-alert-title" = "타셸히트어 변이형 지원 업데이트";
+"tajik-variants-alert-body" = "이제 위키백과 앱에서 아래의 타지크어 변이형을 주 언어나 보조 언어로 설정할 수 있으며, 이를 통해 선호하는 변이형으로 문서의 열람, 검색, 편집 작업을 쉽게 할 수 있습니다.\n\nтоҷикӣ кирилликӣ 타지크어 키릴 (tg-cyrl)\ntojikī lotinī 타지크어 라틴 (tg-latn)";
+"tajik-variants-alert-title" = "타지크어 변이형 지원 업데이트";
 "talk-page-add-discussion-accessibility-label" = "토론 추가";
 "talk-page-discussion-accessibility-hint" = "토론 스레드를 열려면 두 번 탭하십시오";
 "talk-page-discussion-read-accessibility-label" = "읽음";
@@ -865,6 +900,9 @@
 "top-read-header-generic" = "위키백과";
 "top-read-header-with-language" = "$1 위키백과";
 "top-read-see-more" = "윗글 더 보기";
+"top-read-widget-description" = "세상 사람들이 위키백과에서 오늘 무엇을 읽고 있는지 알아보세요.";
+"top-read-widget-readers-count" = "$1명의 독자";
+"top-read-widget-title" = "가장 많이 읽은 글";
 "two-factor-login-continue" = "로그인 계속";
 "two-factor-login-instructions" = "2요소 인증 코드를 입력해 주십시오";
 "two-factor-login-title" = "자신의 계정으로 로그인";
@@ -872,6 +910,10 @@
 "two-factor-login-with-regular-code" = "인증 코드 사용";
 "unable-to-load-talk-page-title" = "토론 문서를 불러올 수 없습니다";
 "unknown-generic-text" = "알 수 없음";
+"uzbek-variants-alert-body" = "이제 위키백과 앱에서 아래의 우즈베크어 변이형을 주 언어나 보조 언어로 설정할 수 있으며, 이를 통해 선호하는 변이형으로 문서의 열람, 검색, 편집 작업을 쉽게 할 수 있습니다.\n\noʻzbekcha lotin 우즈베크어 라틴 (uz-latin)\nўзбекча кирилл 우즈베크어 키릴 (uz-cyrl)";
+"uzbek-variants-alert-title" = "우즈베크어 변이형 지원 업데이트";
+"variants-alert-dismiss-button" = "괜찮습니다";
+"variants-alert-preferences-button" = "내 환경 설정 검토하기";
 "welcome-exploration-explore-feed-description" = "우리 공동체의 권장 읽기 및 일일 문서";
 "welcome-exploration-explore-feed-title" = "탐색 피드";
 "welcome-exploration-on-this-day-description" = "과거의 오늘에 무슨 일이 일어났는지 시간을 돌려 보세요";
@@ -897,6 +939,9 @@
 "welcome-send-data-learn-more" = "수집된 데이터에 대해 더 알아보기";
 "welcome-send-data-sub-title" = "위키미디어 재단의 앱 개선을 지원하기 위해 앱을 어떻게 사용하고 계신지 알려주세요. 수집된 데이터는 익명 처리됩니다.";
 "welcome-volunteer-send-usage-reports" = "사용 보고서 보내기";
+"widget-onthisday-description" = "역사 속에서 오늘 무슨 일이 있었는지 살펴보세요.";
+"widget-onthisday-placeholder-article-snippet" = "누구나 편집할 수 있는 자유로운 온라인 백과사전";
+"widget-onthisday-placeholder-event-snippet" = "자유로운 위키 콘텐츠 백과사전 위키백과가 온라인에 있습니다.";
 "wikitext-downloading" = "내용을 불러오는 중...";
 "wikitext-preview-changes" = "바뀐 내용의 미리 보기를 가져오는 중...";
 "wikitext-preview-changes-none" = "미리 보기에 바뀐 내용이 없습니다.";

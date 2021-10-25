@@ -4,7 +4,7 @@ import UIKit
 import CocoaLumberjackSwift
 import WMF
 
-protocol ArticleAsLivingDocControllerDelegate: class {
+protocol ArticleAsLivingDocControllerDelegate: AnyObject {
     var articleURL: URL { get }
     var article: WMFArticle { get }
     var messagingController: ArticleWebMessagingController { get }
@@ -77,7 +77,7 @@ class ArticleAsLivingDocController: NSObject {
     var shouldAttemptToShowArticleAsLivingDoc: Bool {
         
         guard let delegate = delegate,
-              delegate.articleURL.host == Configuration.Domain.englishWikipedia,
+              delegate.articleURL.wmf_isEnglishWikipedia,
               let view = delegate.view,
               view.effectiveUserInterfaceLayoutDirection == .leftToRight
                else {

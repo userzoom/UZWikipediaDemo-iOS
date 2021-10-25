@@ -6,7 +6,6 @@
 @class WMFArticle;
 @class WMFExploreFeedContentController;
 @class WMFReadingListsController;
-@class WikidataDescriptionEditingController;
 @class RemoteNotificationsController;
 @class WMFArticleSummaryController;
 @class MobileviewToMobileHTMLConverter;
@@ -49,6 +48,9 @@ typedef NS_OPTIONS(NSUInteger, RemoteConfigOption) {
 
 @interface MWKDataStore : NSObject
 
+/// The current library version as used in migrations
+@property (class, nonatomic, readonly) NSInteger currentLibraryVersion;
+
 /**
  *  Initialize with sharedInstance database and legacyDataBasePath
  *
@@ -80,7 +82,6 @@ typedef NS_OPTIONS(NSUInteger, RemoteConfigOption) {
 @property (readonly, strong, nonatomic) MWKSavedPageList *savedPageList;
 @property (readonly, strong, nonatomic) MWKRecentSearchList *recentSearchList;
 @property (readonly, strong, nonatomic) WMFReadingListsController *readingListsController;
-@property (readonly, strong, nonatomic) WikidataDescriptionEditingController *wikidataDescriptionEditingController;
 @property (readonly, strong, nonatomic) RemoteNotificationsController *remoteNotificationsController;
 @property (readonly, strong, nonatomic) WMFArticleSummaryController *articleSummaryController;
 @property (readonly, strong, nonatomic) MWKLanguageLinkController *languageLinkController;
@@ -107,20 +108,15 @@ typedef NS_OPTIONS(NSUInteger, RemoteConfigOption) {
 - (void)prefetchArticles; // fill the article cache to speed up initial feed load
 
 - (nullable WMFArticle *)fetchArticleWithURL:(NSURL *)URL inManagedObjectContext:(NSManagedObjectContext *)moc;
-- (nullable WMFArticle *)fetchArticleWithKey:(NSString *)key inManagedObjectContext:(NSManagedObjectContext *)moc;
 - (nullable WMFArticle *)fetchOrCreateArticleWithURL:(NSURL *)URL inManagedObjectContext:(NSManagedObjectContext *)moc;
+- (nullable WMFArticle *)fetchArticleWithKey:(NSString *)key variant:(nullable NSString *)variant inManagedObjectContext:(NSManagedObjectContext *)moc;
 
 - (nullable WMFArticle *)fetchArticleWithURL:(NSURL *)URL;         //uses the view context
-- (nullable WMFArticle *)fetchArticleWithKey:(NSString *)key;      //uses the view context
 - (nullable WMFArticle *)fetchOrCreateArticleWithURL:(NSURL *)URL; //uses the view context
+- (nullable WMFArticle *)fetchArticleWithKey:(NSString *)key variant:(nullable NSString *)variant; //uses the view context
+- (nullable WMFArticle *)fetchArticleWithKey:(NSString *)key; // Temporary shim for areas like reading lists that are not yet variant-aware
 
 - (nullable WMFArticle *)fetchArticleWithWikidataID:(NSString *)wikidataID; //uses the view context
-
-- (BOOL)isArticleWithURLExcludedFromFeed:(NSURL *)articleURL inManagedObjectContext:(NSManagedObjectContext *)moc;
-- (void)setIsExcludedFromFeed:(BOOL)isExcludedFromFeed withArticleURL:(NSURL *)articleURL inManagedObjectContext:(NSManagedObjectContext *)moc;
-
-- (void)setIsExcludedFromFeed:(BOOL)isExcludedFromFeed withArticleURL:(NSURL *)articleURL;
-- (BOOL)isArticleWithURLExcludedFromFeed:(NSURL *)articleURL;
 
 - (BOOL)save:(NSError **)error;
 

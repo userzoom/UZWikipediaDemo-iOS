@@ -19,24 +19,24 @@ NSString *const WMFEditPencil = @"WMFEditPencil";
     return [URLComponents URL];
 }
 
-+ (NSURL *)wmf_URLWithDefaultSiteAndlanguage:(nullable NSString *)language {
-    return [self wmf_URLWithDomain:WMFConfiguration.current.defaultSiteDomain language:language];
++ (NSURL *)wmf_URLWithDefaultSiteAndLanguageCode:(nullable NSString *)languageCode {
+    return [self wmf_URLWithDomain:WMFConfiguration.current.defaultSiteDomain languageCode:languageCode];
 }
 
 + (NSURL *)wmf_URLWithDefaultSiteAndLocale:(NSLocale *)locale {
-    return [self wmf_URLWithDomain:WMFConfiguration.current.defaultSiteDomain language:[locale objectForKey:NSLocaleLanguageCode]];
+    return [self wmf_URLWithDomain:WMFConfiguration.current.defaultSiteDomain languageCode:[locale objectForKey:NSLocaleLanguageCode]];
 }
 
 + (NSURL *)wmf_URLWithDefaultSiteAndCurrentLocale {
     return [self wmf_URLWithDefaultSiteAndLocale:[NSLocale currentLocale]];
 }
 
-+ (NSURL *)wmf_URLWithDomain:(NSString *)domain language:(nullable NSString *)language {
-    return [[NSURLComponents wmf_componentsWithDomain:domain language:language] URL];
++ (NSURL *)wmf_URLWithDomain:(NSString *)domain languageCode:(nullable NSString *)languageCode {
+    return [[NSURLComponents wmf_componentsWithDomain:domain languageCode:languageCode] URL];
 }
 
-+ (NSURL *)wmf_URLWithDomain:(NSString *)domain language:(nullable NSString *)language title:(NSString *)title fragment:(nullable NSString *)fragment {
-    return [[NSURLComponents wmf_componentsWithDomain:domain language:language title:title fragment:fragment] URL];
++ (NSURL *)wmf_URLWithDomain:(NSString *)domain languageCode:(nullable NSString *)languageCode title:(NSString *)title fragment:(nullable NSString *)fragment {
+    return [[NSURLComponents wmf_componentsWithDomain:domain languageCode:languageCode title:title fragment:fragment] URL];
 }
 
 + (NSURL *)wmf_URLWithSiteURL:(NSURL *)siteURL title:(nullable NSString *)title fragment:(nullable NSString *)fragment query:(nullable NSString *)query {
@@ -93,7 +93,7 @@ NSString *const WMFEditPencil = @"WMFEditPencil";
 - (NSURL *)wmf_URLWithTitle:(NSString *)title {
     NSURLComponents *components = [NSURLComponents componentsWithURL:self resolvingAgainstBaseURL:NO];
     components.wmf_title = title;
-    return components.URL;
+    return [components wmf_URLWithLanguageVariantCode:self.wmf_languageVariantCode];
 }
 
 - (NSURL *)wmf_URLWithTitle:(NSString *)title fragment:(nullable NSString *)fragment query:(nullable NSString *)query {
@@ -101,29 +101,29 @@ NSString *const WMFEditPencil = @"WMFEditPencil";
     components.wmf_title = title;
     components.wmf_fragment = fragment;
     components.percentEncodedQuery = query;
-    return components.URL;
+    return [components wmf_URLWithLanguageVariantCode:self.wmf_languageVariantCode];
 }
 
 - (NSURL *)wmf_URLWithFragment:(nullable NSString *)fragment {
     NSURLComponents *components = [NSURLComponents componentsWithURL:self resolvingAgainstBaseURL:NO];
     components.wmf_fragment = fragment;
-    return components.URL;
+    return [components wmf_URLWithLanguageVariantCode:self.wmf_languageVariantCode];
 }
 
 - (NSURL *)wmf_URLWithPath:(NSString *)path isMobile:(BOOL)isMobile {
     NSURLComponents *components = [NSURLComponents componentsWithURL:self resolvingAgainstBaseURL:NO];
     components.path = [path precomposedStringWithCanonicalMapping];
     if (isMobile != self.wmf_isMobile) {
-        components.host = [NSURLComponents wmf_hostWithDomain:self.wmf_domain language:self.wmf_language isMobile:isMobile];
+        components.host = [NSURLComponents wmf_hostWithDomain:self.wmf_domain languageCode:self.wmf_languageCode isMobile:isMobile];
     }
-    return components.URL;
+    return [components wmf_URLWithLanguageVariantCode:self.wmf_languageVariantCode];
 }
 
 - (NSURL *)wmf_siteURL {
     NSURLComponents *components = [NSURLComponents componentsWithURL:self resolvingAgainstBaseURL:NO];
     components.path = nil;
     components.fragment = nil;
-    return [components URL];
+    return [components wmf_URLWithLanguageVariantCode:self.wmf_languageVariantCode];
 }
 
 - (NSURL *)wmf_APIURL:(BOOL)isMobile {
@@ -147,14 +147,14 @@ NSString *const WMFEditPencil = @"WMFEditPencil";
         return url;
     } else {
         NSURLComponents *components = [NSURLComponents componentsWithURL:url resolvingAgainstBaseURL:NO];
-        components.host = [NSURLComponents wmf_hostWithDomain:url.wmf_domain language:url.wmf_language isMobile:YES];
+        components.host = [NSURLComponents wmf_hostWithDomain:url.wmf_domain languageCode:url.wmf_languageCode isMobile:YES];
         return components.URL;
     }
 }
 
 + (NSURL *)wmf_desktopURLForURL:(NSURL *)url {
     NSURLComponents *components = [NSURLComponents componentsWithURL:url resolvingAgainstBaseURL:NO];
-    components.host = [NSURLComponents wmf_hostWithDomain:url.wmf_domain language:url.wmf_language isMobile:NO];
+    components.host = [NSURLComponents wmf_hostWithDomain:url.wmf_domain languageCode:url.wmf_languageCode isMobile:NO];
     return components.URL;
 }
 
@@ -219,7 +219,7 @@ NSString *const WMFEditPencil = @"WMFEditPencil";
     }
 }
 
-- (NSString *)wmf_language {
+- (NSString *)wmf_languageCode {
     NSArray *hostComponents = [self.host componentsSeparatedByString:@"."];
     if (hostComponents.count < 3) {
         return nil;
@@ -231,20 +231,20 @@ NSString *const WMFEditPencil = @"WMFEditPencil";
 
 - (NSURL *)wmf_canonicalURL {
     NSURLComponents *components = [NSURLComponents componentsWithURL:self resolvingAgainstBaseURL:NO];
-    components.host = [NSURLComponents wmf_hostWithDomain:self.wmf_domain language:self.wmf_language isMobile:NO];
+    components.host = [NSURLComponents wmf_hostWithDomain:self.wmf_domain languageCode:self.wmf_languageCode isMobile:NO];
     components.path = [components.path stringByRemovingPercentEncoding] ?: components.path;
     components.scheme = @"https";
-    return components.URL;
+    return [components wmf_URLWithLanguageVariantCode:self.wmf_languageVariantCode];
 }
 
 - (NSURL *)wmf_databaseURL {
     NSURLComponents *components = [NSURLComponents componentsWithURL:self resolvingAgainstBaseURL:NO];
-    components.host = [NSURLComponents wmf_hostWithDomain:self.wmf_domain language:self.wmf_language isMobile:NO];
+    components.host = [NSURLComponents wmf_hostWithDomain:self.wmf_domain languageCode:self.wmf_languageCode isMobile:NO];
     components.path = [components.path stringByRemovingPercentEncoding] ?: components.path;
     components.fragment = nil;
     components.query = nil;
     components.scheme = @"https";
-    return components.URL;
+    return [components wmf_URLWithLanguageVariantCode:self.wmf_languageVariantCode];
 }
 
 - (NSString *)wmf_databaseKey {
@@ -266,7 +266,7 @@ NSString *const WMFEditPencil = @"WMFEditPencil";
 }
 
 - (BOOL)wmf_isNonStandardURL {
-    return self.wmf_language == nil;
+    return self.wmf_languageCode == nil;
 }
 
 static id wmf_languageVariantAssociatedObjectKey;
@@ -279,4 +279,68 @@ static id wmf_languageVariantAssociatedObjectKey;
     objc_setAssociatedObject(self, &wmf_languageVariantAssociatedObjectKey, code, OBJC_ASSOCIATION_COPY_NONATOMIC);
 }
 
+- (NSString *)wmf_contentLanguageCode {
+    NSString *languageVariantCode = self.wmf_languageVariantCode;
+    if (!languageVariantCode || [languageVariantCode isEqualToString:@""]) {
+        return self.wmf_languageCode;
+    } else {
+        return languageVariantCode;
+    }
+}
+
 @end
+
+#pragma mark - WMFInMemoryURLKey
+
+@interface WMFInMemoryURLKey ()
+@property (nonatomic, copy) NSString *databaseKey;
+@property (nonatomic, copy, nullable) NSString *languageVariantCode;
+@end
+
+@implementation WMFInMemoryURLKey: NSObject
+-(instancetype) initWithDatabaseKey:(NSString *)databaseKey languageVariantCode:(nullable NSString *)languageVariantCode {
+    if (self = [super init]) {
+        self.databaseKey = databaseKey;
+        self.languageVariantCode = languageVariantCode;
+    }
+    return self;
+}
+
+-(nullable instancetype) initWithURL:(NSURL *)URL {
+    NSString *databaseKey = URL.wmf_databaseKey;
+    if (!databaseKey) { return nil; }
+    else { return [self initWithDatabaseKey:databaseKey languageVariantCode:URL.wmf_languageVariantCode]; }
+}
+
+- (nullable NSURL *)URL {
+    NSURL *URL = [NSURL URLWithString:self.databaseKey];
+    URL.wmf_languageVariantCode = self.languageVariantCode;
+    return URL;
+}
+
+WMF_SYNTHESIZE_IS_EQUAL(WMFInMemoryURLKey, isEqualToInMemoryURLKey:)
+
+- (BOOL)isEqualToInMemoryURLKey:(WMFInMemoryURLKey *)rhs {
+    return WMF_RHS_PROP_EQUAL(databaseKey, isEqualToString:) && WMF_RHS_PROP_EQUAL(languageVariantCode, isEqualToString:);
+}
+
+- (NSUInteger)hash {
+    return self.databaseKey.hash ^ flipBitsWithAdditionalRotation(self.languageVariantCode.hash, 1); // When languageVariantCode is nil, the XOR flips the bits
+}
+
+- (NSString *)description {
+    return [NSString stringWithFormat: @"%@ databaseKey: %@, languageVariantCode: %@", [super description], self.databaseKey, self.languageVariantCode];
+}
+
+- (NSString *)userInfoString {
+    return self.languageVariantCode ? [NSString stringWithFormat:@"%@__%@", self.databaseKey, self.languageVariantCode] : self.databaseKey;
+}
+
+@end
+
+@implementation NSURL (WMFInMemoryURLKeyExtensions)
+- (nullable WMFInMemoryURLKey *)wmf_inMemoryKey {
+    return [[WMFInMemoryURLKey alloc] initWithURL:self];
+}
+@end
+

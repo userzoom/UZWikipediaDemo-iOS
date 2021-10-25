@@ -13,7 +13,7 @@ NSString *const WMFFeedImportContextDidSave = @"WMFFeedImportContextDidSave";
 NSString *const WMFViewContextDidSave = @"WMFViewContextDidSave";
 
 NSString *const WMFLibraryVersionKey = @"WMFLibraryVersion";
-static const NSInteger WMFCurrentLibraryVersion = 12;
+static const NSInteger WMFCurrentLibraryVersion = 13;
 
 NSString *const MWKDataStoreValidImageSitePrefix = @"//upload.wikimedia.org/";
 
@@ -40,7 +40,6 @@ NSString *MWKCreateImageURLWithPath(NSString *path) {
 
 @property (nonatomic, strong) WMFReadingListsController *readingListsController;
 @property (nonatomic, strong) WMFExploreFeedContentController *feedContentController;
-@property (nonatomic, strong) WikidataDescriptionEditingController *wikidataDescriptionEditingController;
 @property (nonatomic, strong) RemoteNotificationsController *remoteNotificationsController;
 @property (nonatomic, strong) WMFArticleSummaryController *articleSummaryController;
 @property (nonatomic, strong) MWKLanguageLinkController *languageLinkController;
@@ -79,6 +78,10 @@ NSString *MWKCreateImageURLWithPath(NSString *path) {
     return sharedInstance;
 }
 
++ (NSInteger)currentLibraryVersion {
+    return WMFCurrentLibraryVersion;
+}
+
 #pragma mark - NSObject
 
 - (void)dealloc {
@@ -113,7 +116,6 @@ NSString *MWKCreateImageURLWithPath(NSString *path) {
         self.feedContentController = [[WMFExploreFeedContentController alloc] initWithDataStore:self];
         [self.feedContentController updateContentSources];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didReceiveMemoryWarningWithNotification:) name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
-        self.wikidataDescriptionEditingController = [[WikidataDescriptionEditingController alloc] initWithSession:session configuration:configuration];
         self.remoteNotificationsController = [[RemoteNotificationsController alloc] initWithSession:session configuration:configuration preferredLanguageCodesProvider:self.languageLinkController];
         self.notificationsController = [[WMFNotificationsController alloc] initWithDataStore:self];
         self.articleSummaryController = [[WMFArticleSummaryController alloc] initWithSession:session configuration:configuration dataStore:self];
@@ -245,7 +247,7 @@ NSString *MWKCreateImageURLWithPath(NSString *path) {
         for (NSManagedObject *object in changedObjects) {
             if ([object isKindOfClass:[WMFArticle class]]) {
                 WMFArticle *article = (WMFArticle *)object;
-                NSString *articleKey = article.key;
+                WMFInMemoryURLKey *articleKey = article.inMemoryKey;
                 NSURL *articleURL = article.URL;
                 if (!articleKey || !articleURL) {
                     continue;
@@ -440,7 +442,17 @@ NSString *MWKCreateImageURLWithPath(NSString *path) {
     
     if (currentLibraryVersion < 12) {
         [[WMFEventLoggingService sharedInstance] migrateShareUsageAndInstallIDToUserDefaults];
+        [self migrateToLanguageVariantsForLibraryVersion:12 inManagedObjectContext:moc];
         [moc wmf_setValue:@(12) forKey:WMFLibraryVersionKey];
+        if ([moc hasChanges] && ![moc save:&migrationError]) {
+            DDLogError(@"Error saving during migration: %@", migrationError);
+            return;
+        }
+    }
+    
+    if (currentLibraryVersion < 13) {
+        [self.languageLinkController migrateToUniquedPreferredLanguagesInManagedObjectContext:moc];
+        [moc wmf_setValue:@(13) forKey:WMFLibraryVersionKey];
         if ([moc hasChanges] && ![moc save:&migrationError]) {
             DDLogError(@"Error saving during migration: %@", migrationError);
             return;
@@ -665,7 +677,7 @@ NSString *MWKCreateImageURLWithPath(NSString *path) {
 - (NSString *)pathForDomainInURL:(NSURL *)url {
     NSString *sitesPath = [self pathForSites];
     NSString *domainPath = [sitesPath stringByAppendingPathComponent:url.wmf_domain];
-    return [domainPath stringByAppendingPathComponent:url.wmf_language];
+    return [domainPath stringByAppendingPathComponent:url.wmf_languageCode];
 }
 
 - (NSString *)pathForArticlesInDomainFromURL:(NSURL *)url {
@@ -775,7 +787,9 @@ NSString *MWKCreateImageURLWithPath(NSString *path) {
         if (!key) {
             continue;
         }
-        [self.articleCache setObject:article forKey:key];
+        NSString *variant = article.variant;
+        WMFInMemoryURLKey *cacheKey = [[WMFInMemoryURLKey alloc] initWithDatabaseKey:key languageVariantCode:variant];
+        [self.articleCache setObject:article forKey:cacheKey];
     }
 }
 
@@ -805,9 +819,10 @@ NSString *MWKCreateImageURLWithPath(NSString *path) {
     WMFTaskGroup *taskGroup = [[WMFTaskGroup alloc] init];
 
     // Site info
-    NSURLComponents *components = [self.configuration mediaWikiAPIURLComponentsForHost:@"meta.wikimedia.org" withQueryParameters:WikipediaSiteInfo.defaultRequestParameters];
+    NSURL *siteURL = [NSURL URLWithString:@"//meta.wikimedia.org"]; // Only the host of the URL is needed
+    NSURL *URL = [self.configuration mediaWikiAPIURLForURL:siteURL withQueryParameters:WikipediaSiteInfo.defaultRequestParameters];
     [taskGroup enter];
-    [self.session getJSONDictionaryFromURL:components.URL
+    [self.session getJSONDictionaryFromURL:URL
                                       ignoreCache:YES
                                 completionHandler:^(NSDictionary<NSString *, id> *_Nullable siteInfo, NSURLResponse *_Nullable response, NSError *_Nullable error) {
                                     dispatch_async(dispatch_get_main_queue(), ^{
@@ -884,20 +899,22 @@ NSString *MWKCreateImageURLWithPath(NSString *path) {
 }
 
 - (nullable WMFArticle *)fetchArticleWithURL:(NSURL *)URL inManagedObjectContext:(nonnull NSManagedObjectContext *)moc {
-    return [self fetchArticleWithKey:[URL wmf_databaseKey] inManagedObjectContext:moc];
+    return [self fetchArticleWithKey:URL.wmf_databaseKey variant:URL.wmf_languageVariantCode inManagedObjectContext:moc];
 }
 
-- (nullable WMFArticle *)fetchArticleWithKey:(NSString *)key inManagedObjectContext:(nonnull NSManagedObjectContext *)moc {
+- (nullable WMFArticle *)fetchArticleWithKey:(NSString *)key variant:(nullable NSString *)variant inManagedObjectContext:(nonnull NSManagedObjectContext *)moc {
     WMFArticle *article = nil;
     if (moc == _viewContext) { // use ivar to avoid main thread check
-        article = [self.articleCache objectForKey:key];
+        WMFInMemoryURLKey *cacheKey = [[WMFInMemoryURLKey alloc] initWithDatabaseKey:key languageVariantCode:variant];
+        article = [self.articleCache objectForKey:cacheKey];
         if (article) {
             return article;
         }
     }
-    article = [moc fetchArticleWithKey:key];
+    article = [moc fetchArticleWithKey:key variant:variant];
     if (article && moc == _viewContext) { // use ivar to avoid main thread check
-        [self.articleCache setObject:article forKey:key];
+        WMFInMemoryURLKey *cacheKey = [[WMFInMemoryURLKey alloc] initWithDatabaseKey:key languageVariantCode:variant];
+        [self.articleCache setObject:article forKey:cacheKey];
     }
     return article;
 }
@@ -907,65 +924,41 @@ NSString *MWKCreateImageURLWithPath(NSString *path) {
 }
 
 - (nullable WMFArticle *)fetchOrCreateArticleWithURL:(NSURL *)URL inManagedObjectContext:(NSManagedObjectContext *)moc {
-    NSString *language = URL.wmf_language;
+    NSString *language = URL.wmf_languageCode;
     NSString *title = URL.wmf_title;
-    NSString *key = [URL wmf_databaseKey];
+    NSString *key = URL.wmf_databaseKey;
     if (!language || !title || !key) {
         return nil;
     }
-    WMFArticle *article = [self fetchArticleWithKey:key inManagedObjectContext:moc];
+    NSString *variant = URL.wmf_languageVariantCode;
+    WMFArticle *article = [self fetchArticleWithKey:key variant: variant inManagedObjectContext:moc];
     if (!article) {
-        article = [moc createArticleWithKey:key];
+        article = [moc createArticleWithKey:key variant:variant];
         article.displayTitleHTML = article.displayTitle;
         if (moc == self.viewContext) {
-            [self.articleCache setObject:article forKey:key];
+            WMFInMemoryURLKey *cacheKey = [[WMFInMemoryURLKey alloc] initWithDatabaseKey:key languageVariantCode:variant];
+            [self.articleCache setObject:article forKey:cacheKey];
         }
     }
     return article;
 }
 
 - (nullable WMFArticle *)fetchArticleWithURL:(NSURL *)URL {
-    return [self fetchArticleWithKey:[URL wmf_databaseKey]];
+    return [self fetchArticleWithKey:URL.wmf_databaseKey variant:URL.wmf_languageVariantCode];
 }
 
 - (nullable WMFArticle *)fetchArticleWithKey:(NSString *)key {
+    return [self fetchArticleWithKey:key variant:nil];
+}
+
+- (nullable WMFArticle *)fetchArticleWithKey:(NSString *)key variant:(nullable NSString *)variant {
     WMFAssertMainThread(@"Article fetch must be performed on the main thread.");
-    return [self fetchArticleWithKey:key inManagedObjectContext:self.viewContext];
+    return [self fetchArticleWithKey:key variant:variant inManagedObjectContext:self.viewContext];
 }
 
 - (nullable WMFArticle *)fetchOrCreateArticleWithURL:(NSURL *)URL {
     WMFAssertMainThread(@"Article fetch must be performed on the main thread.");
     return [self fetchOrCreateArticleWithURL:URL inManagedObjectContext:self.viewContext];
-}
-
-- (void)setIsExcludedFromFeed:(BOOL)isExcludedFromFeed withArticleURL:(NSURL *)articleURL inManagedObjectContext:(NSManagedObjectContext *)moc {
-    NSParameterAssert(articleURL);
-    if ([articleURL wmf_isNonStandardURL]) {
-        return;
-    }
-    if ([articleURL.wmf_title length] == 0) {
-        return;
-    }
-
-    WMFArticle *article = [self fetchOrCreateArticleWithURL:articleURL inManagedObjectContext:moc];
-    article.isExcludedFromFeed = isExcludedFromFeed;
-    [self save:nil];
-}
-
-- (BOOL)isArticleWithURLExcludedFromFeed:(NSURL *)articleURL inManagedObjectContext:(NSManagedObjectContext *)moc {
-    WMFArticle *article = [self fetchArticleWithURL:articleURL inManagedObjectContext:moc];
-    if (!article) {
-        return NO;
-    }
-    return article.isExcludedFromFeed;
-}
-
-- (void)setIsExcludedFromFeed:(BOOL)isExcludedFromFeed withArticleURL:(NSURL *)articleURL {
-    [self setIsExcludedFromFeed:isExcludedFromFeed withArticleURL:articleURL inManagedObjectContext:self.viewContext];
-}
-
-- (BOOL)isArticleWithURLExcludedFromFeed:(NSURL *)articleURL {
-    return [self isArticleWithURLExcludedFromFeed:articleURL inManagedObjectContext:self.viewContext];
 }
 
 #pragma mark - WMFAuthenticationManagerDelegate

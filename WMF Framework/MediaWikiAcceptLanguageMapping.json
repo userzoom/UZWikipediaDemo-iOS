@@ -2,7 +2,6 @@
     "zh": {
         "default": {
             "default": "zh-hans",
-            "cn": "zh-cn",
             "hk": "zh-hk",
             "mo": "zh-mo",
             "my": "zh-my",
@@ -11,7 +10,6 @@
         },
         "hans": {
             "default": "zh-hans",
-            "cn": "zh-cn",
             "hk": "zh-hk",
             "mo": "zh-mo",
             "my": "zh-my",
@@ -19,8 +17,7 @@
             "tw": "zh-tw"
         },
         "hant": {
-            "default": "zh-hant",
-            "cn": "zh-cn",
+            "default": "zh-hk",
             "hk": "zh-hk",
             "mo": "zh-mo",
             "my": "zh-my",
@@ -37,6 +34,55 @@
         },
         "latn": {
             "default": "sr-el"
+        }
+    },
+    "crh": {
+        "default": {
+            "default": "crh-latn"
+        }
+    },
+    "gan": {
+        "default": {
+            "default": "gan-hans"
+        }
+    },
+    "ku": {
+        "default": {
+            "default": "ku-latn",
+        }
+    },
+    "kk": {
+        "default": {
+            "default": "kk-cyrl"
+        }
+    },
+    "tg": {
+        "default": {
+            "default": "tg-cyrl",
+        }
+    },
+    "iu": {
+        "default": {
+            "default": "ike-cans",
+        }
+    },
+    "uz": {
+        "cyrl": {
+            "default": "uz-cyrl",
+        },
+        "default": {
+            "default": "uz-latin",
+        },
+        "arab": {
+            "default": "uz-latin",
+        },
+        "latn": {
+            "default": "uz-latin",
+        }
+    },
+    "nb": {
+        "default": {
+            "default": "no",
         }
     }
 }
