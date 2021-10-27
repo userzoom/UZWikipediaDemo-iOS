@@ -5,7 +5,7 @@ extension URL {
     public var replacingSchemeWithWikipediaScheme: URL? {
         var components = URLComponents(url: self, resolvingAgainstBaseURL: false)
         components?.scheme = "wikipedia"
-        return components?.url
+        return components?.wmf_URLWithLanguageVariantCode(wmf_languageVariantCode)
     }
     
     /// Returns the percent encoded page title to handle titles with / characters
@@ -24,7 +24,7 @@ extension URL {
         let encodedPathComponents = ["wiki", percentEncodedTitle]
         var encodedURLComponents = URLComponents(url: self, resolvingAgainstBaseURL: false)
         encodedURLComponents?.replacePercentEncodedPathWithPathComponents(encodedPathComponents)
-        return encodedURLComponents?.url
+        return encodedURLComponents?.wmf_URLWithLanguageVariantCode(wmf_languageVariantCode)
     }
     
     /// Resolves a relative href from a wiki page against the callee.
@@ -43,11 +43,13 @@ extension URL {
         let components = URLComponents(string: urlComponentsString)
         // Encode this URL to handle titles with forward slashes, otherwise URLComponents thinks they're separate path components
         let encodedBaseURL = encodedWikiURL
-        return components?.url(relativeTo: encodedBaseURL)?.absoluteURL
+        var resolvedURL = components?.url(relativeTo: encodedBaseURL)?.absoluteURL
+        resolvedURL?.wmf_languageVariantCode = wmf_languageVariantCode
+        return resolvedURL
     }
     
-    public var wmf_language: String? {
-        return (self as NSURL).wmf_language
+    public var wmf_languageCode: String? {
+        return (self as NSURL).wmf_languageCode
     }
     
     public var wmf_languageVariantCode: String? {
@@ -55,6 +57,10 @@ extension URL {
         set { (self as NSURL).wmf_languageVariantCode = newValue }
     }
     
+    public var wmf_contentLanguageCode: String? {
+        return (self as NSURL).wmf_contentLanguageCode
+    }
+
     public var wmf_title: String? {
         return (self as NSURL).wmf_title
     }
@@ -65,6 +71,10 @@ extension URL {
     
     public var wmf_databaseKey: String? {
         return (self as NSURL).wmf_databaseKey
+    }
+    
+    public var wmf_inMemoryKey: WMFInMemoryURLKey? {
+        return (self as NSURL).wmf_inMemoryKey
     }
     
     public var wmf_site: URL? {
@@ -86,16 +96,21 @@ extension URL {
     public var wmf_isNonStandardURL: Bool {
         return (self as NSURL).wmf_isNonStandardURL
     }
+    
+    /// returns true if host is en.wikipedia.org. Assumes desktop Wikipedia production format, i.e. that "en.wikipedia.org" is the host component and not in the path.
+    public var wmf_isEnglishWikipedia: Bool {
+        host == Configuration.Domain.englishWikipedia
+    }
 
     public var wmf_wiki: String? {
-        return wmf_language?.replacingOccurrences(of: "-", with: "_").appending("wiki")
+        return wmf_languageCode?.replacingOccurrences(of: "-", with: "_").appending("wiki")
     }
     
     fileprivate func wmf_URLForSharing(with wprov: String) -> URL {
         let queryItems = [URLQueryItem(name: "wprov", value: wprov)]
         var components = URLComponents(url: self, resolvingAgainstBaseURL: false)
         components?.queryItems = queryItems
-        return components?.url ?? self
+        return components?.wmf_URLWithLanguageVariantCode(wmf_languageVariantCode) ?? self
     }
     
     // URL for sharing text only
@@ -121,14 +136,14 @@ extension URL {
     }
     
     public var namespace: PageNamespace? {
-        guard let language = wmf_language else {
+        guard let language = wmf_languageCode else {
             return nil
         }
         return wikiResourcePath?.namespaceOfWikiResourcePath(with: language)
     }
     
     public var namespaceAndTitle: (namespace: PageNamespace, title: String)? {
-        guard let language = wmf_language else {
+        guard let language = wmf_languageCode else {
             return nil
         }
         return wikiResourcePath?.namespaceAndTitleOfWikiResourcePath(with: language)
@@ -186,7 +201,7 @@ extension URL {
         var urlComponents = URLComponents(url: self, resolvingAgainstBaseURL: true)
         let path = "/" + mutableComponents.joined(separator: "/")
         urlComponents?.percentEncodedPath = path.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlPathAllowed) ?? path
-        return urlComponents?.url ?? self
+        return urlComponents?.wmf_URLWithLanguageVariantCode(wmf_languageVariantCode) ?? self
     }
 }
 

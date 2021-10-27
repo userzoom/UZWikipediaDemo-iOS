@@ -16,6 +16,7 @@ static NSString *const WMFPreviousLanguagesKey = @"WMFPreviousSelectedLanguagesK
 @interface MWKLanguageLinkController ()
 
 @property (weak, nonatomic) NSManagedObjectContext *moc;
+@property (nullable, copy, nonatomic) NSArray<MWKLanguageLink *> *cachedPreferredLanguages;
 
 @end
 
@@ -24,6 +25,7 @@ static NSString *const WMFPreviousLanguagesKey = @"WMFPreviousSelectedLanguagesK
 - (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)moc {
     if (self = [super init]) {
         self.moc = moc;
+        self.cachedPreferredLanguages = nil;
     }
     return self;
 }
@@ -71,10 +73,44 @@ static NSString *const WMFPreviousLanguagesKey = @"WMFPreviousSelectedLanguagesK
     return [MWKLanguageLinkController allLanguages];
 }
 
-- (nullable MWKLanguageLink *)languageForSiteURL:(NSURL *)siteURL {
-    return [self.allLanguages wmf_match:^BOOL(MWKLanguageLink *obj) {
-        return [obj.siteURL isEqual:siteURL];
+- (nullable NSString *)preferredLanguageVariantCodeForLanguageCode:(nullable NSString *)languageCode {
+    if (!languageCode) {
+        return nil;
+    }
+
+    // Find first with matching language code in app preferred languages
+    MWKLanguageLink *matchingLanguageLink = [self.preferredLanguages wmf_match:^BOOL(MWKLanguageLink *obj) {
+        return [obj.languageCode isEqual:languageCode];
     }];
+
+    // If the matching link does not have a language variant code, the language does not have variants. Return nil.
+    if (matchingLanguageLink) {
+        return matchingLanguageLink.languageVariantCode ?: nil;
+    }
+
+    // If not found in the app's preferred languages, get the best guess from the user's OS settings.
+    return [NSLocale wmf_bestLanguageVariantCodeForLanguageCode:languageCode];
+}
+
++ (nullable NSString *)languageCodeForISOLanguageCode:(nullable NSString *)isoLanguageCode {
+    // Map altISOCodes to languageCodes once for fast lookups
+    static dispatch_once_t onceToken;
+    static NSDictionary<NSString *, NSString *> *languageCodesByAltISOCode;
+    dispatch_once(&onceToken, ^{
+        NSMutableDictionary *tempDict = [[NSMutableDictionary alloc] init];
+        for (MWKLanguageLink *language in self.allLanguages) {
+            if (language.altISOCode) {
+                tempDict[language.altISOCode] = language.languageCode;
+            }
+        }
+        languageCodesByAltISOCode = [tempDict copy];
+    });
+    if (!isoLanguageCode) {
+        return nil;
+    }
+    
+    NSString *languageCode = languageCodesByAltISOCode[isoLanguageCode];
+    return languageCode ? : isoLanguageCode; // If no alternative ISO code, use the original value
 }
 
 - (nullable MWKLanguageLink *)appLanguage {
@@ -82,12 +118,18 @@ static NSString *const WMFPreviousLanguagesKey = @"WMFPreviousSelectedLanguagesK
 }
 
 - (NSArray<MWKLanguageLink *> *)preferredLanguages {
-    NSArray *preferredLanguageCodes = [self readPreferredLanguageCodes];
-    return [preferredLanguageCodes wmf_mapAndRejectNil:^id(NSString *langString) {
-        return [self.allLanguages wmf_match:^BOOL(MWKLanguageLink *langLink) {
-            return [langLink.contentLanguageCode isEqualToString:langString];
+    // Without caching, every call does a database fetch and lookup through allLanguages
+    // even though the array contents change only when user updates preferred language settings
+    if (!self.cachedPreferredLanguages) {
+        NSArray *preferredLanguageCodes = [self readPreferredLanguageCodes];
+        self.cachedPreferredLanguages = [preferredLanguageCodes wmf_mapAndRejectNil:^id(NSString *isoLanguageCode) {
+            NSString *contentLanguageCode = [MWKLanguageLinkController languageCodeForISOLanguageCode:isoLanguageCode];
+            return [self.allLanguages wmf_match:^BOOL(MWKLanguageLink *languageLink) {
+                return [languageLink.contentLanguageCode isEqualToString:contentLanguageCode];
+            }];
         }];
-    }];
+    }
+    return self.cachedPreferredLanguages;
 }
 
 - (NSArray<NSURL *> *)preferredSiteURLs {
@@ -137,9 +179,13 @@ static NSString *const WMFPreviousLanguagesKey = @"WMFPreviousSelectedLanguagesK
 #pragma mark - Reading/Saving Preferred Language Codes
 
 - (NSArray<NSString *> *)readSavedPreferredLanguageCodes {
+    return [self readSavedPreferredLanguageCodesInManagedObjectContext:self.moc];
+}
+
+- (NSArray<NSString *> *)readSavedPreferredLanguageCodesInManagedObjectContext:(NSManagedObjectContext *)moc {
     __block NSArray<NSString *> *preferredLanguages = nil;
-    [self.moc performBlockAndWait:^{
-        preferredLanguages = [self.moc wmf_arrayValueForKey:WMFPreviousLanguagesKey] ?: @[];
+    [moc performBlockAndWait:^{
+        preferredLanguages = [moc wmf_arrayValueForKey:WMFPreviousLanguagesKey] ?: @[];
     }];
     return preferredLanguages;
 }
@@ -148,7 +194,7 @@ static NSString *const WMFPreviousLanguagesKey = @"WMFPreviousSelectedLanguagesK
     NSMutableArray<NSString *> *preferredLanguages = [[self readSavedPreferredLanguageCodes] mutableCopy];
 
     if (preferredLanguages.count == 0) {
-        NSArray<NSString *> *osLanguages = NSLocale.wmf_preferredLocaleLanguageCodes;
+        NSArray<NSString *> *osLanguages = NSLocale.wmf_preferredWikipediaLanguageCodes;
         [osLanguages enumerateObjectsWithOptions:0
                                       usingBlock:^(id _Nonnull obj, NSUInteger idx, BOOL *_Nonnull stop) {
                                           if (![preferredLanguages containsObject:obj]) {
@@ -162,36 +208,60 @@ static NSString *const WMFPreviousLanguagesKey = @"WMFPreviousSelectedLanguagesK
 }
 
 - (void)savePreferredLanguageCodes:(NSArray<NSString *> *)languageCodes changeType:(WMFPreferredLanguagesChangeType)changeType changedLanguage:(MWKLanguageLink *)changedLanguage {
+    [self savePreferredLanguageCodes:languageCodes changeType:changeType changedLanguage:changedLanguage inManagedObjectContext:self.moc];
+}
+
+- (void)savePreferredLanguageCodes:(NSArray<NSString *> *)languageCodes changeType:(WMFPreferredLanguagesChangeType)changeType changedLanguage:(nullable MWKLanguageLink *)changedLanguage inManagedObjectContext:(NSManagedObjectContext *)moc {
     NSString *previousAppContentLanguageCode = self.appLanguage.contentLanguageCode;
-    [self willChangeValueForKey:WMF_SAFE_KEYPATH(self, allLanguages)];
-    [self.moc performBlockAndWait:^{
-        [self.moc wmf_setValue:languageCodes forKey:WMFPreviousLanguagesKey];
+    [moc performBlockAndWait:^{
+        [moc wmf_setValue:languageCodes forKey:WMFPreviousLanguagesKey];
         NSError *preferredLanguageCodeSaveError = nil;
-        if (![self.moc save:&preferredLanguageCodeSaveError]) {
+        if (![moc save:&preferredLanguageCodeSaveError]) {
             DDLogError(@"Error saving preferred languages: %@", preferredLanguageCodeSaveError);
         }
     }];
-    [self didChangeValueForKey:WMF_SAFE_KEYPATH(self, allLanguages)];
-    NSDictionary *userInfo = @{WMFPreferredLanguagesChangeTypeKey: @(changeType), WMFPreferredLanguagesLastChangedLanguageKey: changedLanguage};
-    [[NSNotificationCenter defaultCenter] postNotificationName:WMFPreferredLanguagesDidChangeNotification object:self userInfo:userInfo];
-    if (self.appLanguage.contentLanguageCode && ![self.appLanguage.contentLanguageCode isEqualToString:previousAppContentLanguageCode]) {
-        [[NSNotificationCenter defaultCenter] postNotificationName:WMFAppLanguageDidChangeNotification object:self];
+    
+    // Even when supressing external notifications during language variant migration,
+    // the internal cache always needs to be refreshed when new preferred language codes are saved.
+    self.cachedPreferredLanguages = nil;
+
+    // Send notifications only if there is a change type and changed language
+    // Used to avoid sending notifications during language variant migration
+    if (changeType && changedLanguage) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:MWKLanguageFilterDataSourceLanguagesDidChangeNotification object:self];
+        NSDictionary *userInfo = @{WMFPreferredLanguagesChangeTypeKey: @(changeType), WMFPreferredLanguagesLastChangedLanguageKey: changedLanguage};
+        [[NSNotificationCenter defaultCenter] postNotificationName:WMFPreferredLanguagesDidChangeNotification object:self userInfo:userInfo];
+        if (self.appLanguage.contentLanguageCode && ![self.appLanguage.contentLanguageCode isEqualToString:previousAppContentLanguageCode]) {
+            [[NSNotificationCenter defaultCenter] postNotificationName:WMFAppLanguageDidChangeNotification object:self];
+        }
     }
 }
 
 // Reminder: "resetPreferredLanguages" is for testing only!
 - (void)resetPreferredLanguages {
-    [self willChangeValueForKey:WMF_SAFE_KEYPATH(self, allLanguages)];
     [self.moc performBlockAndWait:^{
         [self.moc wmf_setValue:nil forKey:WMFPreviousLanguagesKey];
     }];
-    [self didChangeValueForKey:WMF_SAFE_KEYPATH(self, allLanguages)];
+    self.cachedPreferredLanguages = nil;
+    [[NSNotificationCenter defaultCenter] postNotificationName:MWKLanguageFilterDataSourceLanguagesDidChangeNotification object:self];
     [[NSNotificationCenter defaultCenter] postNotificationName:WMFPreferredLanguagesDidChangeNotification object:self];
+}
+
+- (void)getPreferredContentLanguageCodes:(void (^)(NSArray<NSString *> *))completion {
+    [self.moc performBlock:^{
+        completion([self readPreferredLanguageCodes]);
+    }];
 }
 
 - (void)getPreferredLanguageCodes:(void (^)(NSArray<NSString *> *))completion {
     [self.moc performBlock:^{
-        completion([self readPreferredLanguageCodes]);
+        NSArray<MWKLanguageLink *> *preferredLanguages = [self preferredLanguages];
+        NSMutableSet<NSString *> *preferredLanguageCodes = [[NSMutableSet alloc] init];
+        for (MWKLanguageLink *language in preferredLanguages) {
+            [preferredLanguageCodes addObject:language.languageCode];
+        }
+
+        completion(preferredLanguageCodes.allObjects);
     }];
 }
 
@@ -199,6 +269,127 @@ static NSString *const WMFPreviousLanguagesKey = @"WMFPreviousSelectedLanguagesK
 + (void)migratePreferredLanguagesToManagedObjectContext:(NSManagedObjectContext *)moc {
     NSArray *preferredLanguages = [[NSUserDefaults standardUserDefaults] arrayForKey:WMFPreviousLanguagesKey];
     [moc wmf_setValue:preferredLanguages forKey:WMFPreviousLanguagesKey];
+}
+
+- (void)migratePreferredLanguagesToLanguageVariants:(NSDictionary<NSString *, NSString *> *)languageMapping inManagedObjectContext:(NSManagedObjectContext *)moc {
+    NSArray<NSString *> *preferredLanguageCodes = [[self readSavedPreferredLanguageCodesInManagedObjectContext:moc] copy];
+    NSMutableArray<NSString *> *updatedLanguageCodes = [preferredLanguageCodes mutableCopy];
+    BOOL languageCodesChanged = NO;
+    NSInteger currentIndex = 0;
+    for (NSString *languageCode in preferredLanguageCodes) {
+        NSString *migratedLanguageCode = languageMapping[languageCode];
+        if (migratedLanguageCode) {
+            [updatedLanguageCodes replaceObjectAtIndex:currentIndex withObject:languageMapping[languageCode]];
+            languageCodesChanged = YES;
+        }
+        currentIndex++;
+    }
+
+    if (languageCodesChanged) {
+        // No changeType and nil changedLanguage will skip sending of notifications that preferred languages changed
+        [self savePreferredLanguageCodes:updatedLanguageCodes changeType:0 changedLanguage:nil inManagedObjectContext:moc];
+    }
+}
+
+- (void)migrateToUniquedPreferredLanguagesInManagedObjectContext:(NSManagedObjectContext *)moc {
+    NSArray *preferredLangaugeCodes = [self readSavedPreferredLanguageCodesInManagedObjectContext:moc];
+    NSArray *uniquedCodes = [[NSOrderedSet orderedSetWithArray:preferredLangaugeCodes] array];
+    if (preferredLangaugeCodes.count != uniquedCodes.count) {
+        // No changeType and nil changedLanguage will skip sending of notifications that preferred languages changed
+        [self savePreferredLanguageCodes:uniquedCodes changeType:0 changedLanguage:nil inManagedObjectContext:moc];
+    }
+}
+
+@end
+
+#pragma mark -
+
+@implementation MWKLanguageLinkController (ArticleLanguageLinkVariants)
+
+/// Given an article URL, if the URL has a language variant, an array of MWKLanguageLink instances of the remaining variants for that language is returned.
+/// This allows a user viewing an article in one language variant to choose to view the article using another variant.
+/// If the provided URL does not have a language variant, returns an empty array.
+- (NSArray<MWKLanguageLink *> *)remainingLanguageLinkVariantsForArticleURL:(NSURL *)articleURL {
+    // If the original URL is a variant, include the other variants as choices
+    NSString *originalURLLanguageVariantCode = articleURL.wmf_languageVariantCode;
+    NSString *originalURLLanguageCode = articleURL.wmf_languageCode;
+    NSMutableArray *remainingLanguageVariantLinks = [[NSMutableArray alloc] init];
+    if (originalURLLanguageVariantCode && originalURLLanguageCode) {
+        NSArray<MWKLanguageLink *> *variants = [MWKLanguageLinkController allLanguageVariantsBySiteLanguageCode][originalURLLanguageCode];
+        if (variants) {
+            for (MWKLanguageLink *variant in variants) {
+                if (![variant.languageVariantCode isEqualToString:originalURLLanguageVariantCode]) {
+                    MWKLanguageLink *articleVariant = [variant languageLinkWithPageTitleText:articleURL.wmf_titleWithUnderscores];
+                    [remainingLanguageVariantLinks addObject:articleVariant];
+                }
+            }
+        }
+    }
+    return remainingLanguageVariantLinks;
+}
+
+/// Given an array of article language links, returns an array where any language with variants is replaced with one article language link per variant
+- (NSArray<MWKLanguageLink *> *)languageLinksReplacingArticleLanguageLinksWithVariants:(NSArray<MWKLanguageLink *> *)articleLanguageLinks {
+    NSMutableArray *processedLanguageLinks = [[NSMutableArray alloc] init];
+    for (MWKLanguageLink *language in articleLanguageLinks) {
+        NSAssert((language.languageVariantCode == nil && ![language.languageVariantCode isEqualToString:@""]), @"The method %s should only be called with MWKLanguageLink objects with a nil or empty-string languageVariantCode", __PRETTY_FUNCTION__);
+        NSArray<MWKLanguageLink *> *variants = [MWKLanguageLinkController allLanguageVariantsBySiteLanguageCode][language.languageCode];
+        if (variants) {
+            for (MWKLanguageLink *variant in variants) {
+                MWKLanguageLink *articleVariant = [variant languageLinkWithPageTitleText:language.pageTitleText];
+                [processedLanguageLinks addObject:articleVariant];
+            }
+        } else {
+            [processedLanguageLinks addObject:language];
+        }
+    }
+    return processedLanguageLinks;
+}
+
+- (NSArray<MWKLanguageLink *> *)articleLanguageLinksWithVariantsFromArticleURL:(NSURL *)articleURL articleLanguageLinks:(NSArray<MWKLanguageLink *> *)articleLanguageLinks {
+
+    // If the original URL is a variant, include the other variants as choices
+    NSArray *remainingLanguageLinkVariants = [self remainingLanguageLinkVariantsForArticleURL:articleURL];
+
+    // If any of the available languages has variants, substitute in the variants.
+    NSArray *articleLanguageLinksWithVariants = [self languageLinksReplacingArticleLanguageLinksWithVariants:articleLanguageLinks];
+
+    return [articleLanguageLinksWithVariants arrayByAddingObjectsFromArray:remainingLanguageLinkVariants];
+}
+
+@end
+
+#pragma mark -
+
+@implementation MWKLanguageLinkController (LayoutDirectionAdditions)
+
++ (BOOL)isLanguageRTLForContentLanguageCode:(nullable NSString *)contentLanguageCode {
+    return contentLanguageCode && [[MWKLanguageLinkController rtlContentLanguageCodes] containsObject:contentLanguageCode];
+}
+
++ (NSString *)layoutDirectionForContentLanguageCode:(nullable NSString *)contentLanguageCode {
+    return [MWKLanguageLinkController isLanguageRTLForContentLanguageCode:contentLanguageCode] ? @"rtl" : @"ltr";
+}
+
++ (UISemanticContentAttribute)semanticContentAttributeForContentLanguageCode:(nullable NSString *)contentLanguageCode {
+    if (!contentLanguageCode) {
+        return UISemanticContentAttributeUnspecified;
+    }
+    return [MWKLanguageLinkController isLanguageRTLForContentLanguageCode:contentLanguageCode] ? UISemanticContentAttributeForceRightToLeft : UISemanticContentAttributeForceLeftToRight;
+}
+
+/*
+ * The set of content language codes that should be displayed right-to-left. This includes both language codes as well as any right-to-left language variants.
+ * For example, Kurdish has a Latin left-to-right variant (kk-latn) and an Arabic right-to-left variant (kk-arab). For languages with variants only variants
+ * that are right-to-left should be included in the set.
+ */
++ (NSSet *)rtlContentLanguageCodes {
+    static dispatch_once_t onceToken;
+    static NSSet *rtlLanguages;
+    dispatch_once(&onceToken, ^{
+        rtlLanguages = [NSSet setWithObjects:@"arc", @"arz", @"ar", @"azb", @"bcc", @"bqi", @"ckb", @"dv", @"fa", @"glk", @"lrc", @"he", @"khw", @"ks", @"mzn", @"nqo", @"pnb", @"ps", @"sd", @"ug", @"ur", @"yi", @"kk-arab", @"ku-arab", nil];
+    });
+    return rtlLanguages;
 }
 
 @end

@@ -42,7 +42,7 @@ let WMFSendUsageReports = "WMFSendUsageReports"
         static let didShowDescriptionPublishedPanel = "WMFDidShowDescriptionPublishedPanel"
         static let didShowEditingOnboarding = "WMFDidShowEditingOnboarding"
         static let autoSignTalkPageDiscussions = "WMFAutoSignTalkPageDiscussions"
-        static let shouldCheckForArticleAnnouncements = "WMFShouldCheckForArticleAnnouncements"
+        static let talkPageForceRefreshRevisionIDs = "WMFTalkPageForceRefreshRevisionIDs"
     }
 
     @objc func wmf_dateForKey(_ key: String) -> Date? {
@@ -253,28 +253,13 @@ let WMFSendUsageReports = "WMFSendUsageReports"
         }
     }
     
-    @objc func wmf_currentSearchLanguageDomain() -> URL? {
-        if let url = self.url(forKey: WMFSearchURLKey) {
-            return url
-        }else if let language = self.object(forKey: WMFSearchLanguageKey) as? String {
-            let url = NSURL.wmf_URL(withDefaultSiteAndlanguage: language)
-            self.wmf_setCurrentSearchLanguageDomain(url)
-            return url
-        }else{
-            return nil
-        }
+    @objc func wmf_currentSearchContentLanguageCode() -> String? {
+        self.string(forKey: WMFSearchLanguageKey)
     }
     
-    @objc func wmf_setCurrentSearchLanguageDomain(_ url: URL?) {
-        guard let url = url else{
-            self.removeObject(forKey: WMFSearchURLKey)
-            return
-        }
-        guard !url.wmf_isNonStandardURL else{
-            return;
-        }
-        
-        self.set(url, forKey: WMFSearchURLKey)
+    @objc func wmf_setCurrentSearchContentLanguageCode(_ code: String?) {
+        if let code = code { set(code, forKey: WMFSearchLanguageKey) }
+        else { removeObject(forKey: WMFSearchLanguageKey) }
     }
     
     @objc func wmf_setDidShowWIconPopover(_ shown: Bool) {
@@ -475,13 +460,25 @@ let WMFSendUsageReports = "WMFSendUsageReports"
             set(newValue, forKey: UserDefaults.Key.autoSignTalkPageDiscussions)
         }
     }
-
-    @objc var shouldCheckForArticleAnnouncements: Bool {
+    
+    var talkPageForceRefreshRevisionIDs: Set<Int>? {
         get {
-            return bool(forKey: UserDefaults.Key.shouldCheckForArticleAnnouncements)
+            guard let arrayValue = array(forKey: UserDefaults.Key.talkPageForceRefreshRevisionIDs) as? [Int],
+                !arrayValue.isEmpty else {
+                return nil
+            }
+            return Set<Int>(arrayValue)
         }
         set {
-            set(newValue, forKey: UserDefaults.Key.shouldCheckForArticleAnnouncements)
+            
+            guard let newValue = newValue,
+                !newValue.isEmpty else {
+                removeObject(forKey: UserDefaults.Key.talkPageForceRefreshRevisionIDs)
+                return
+            }
+            
+            let arrayValue = Array(newValue)
+            set(arrayValue, forKey: UserDefaults.Key.talkPageForceRefreshRevisionIDs)
         }
     }
 #if UI_TEST

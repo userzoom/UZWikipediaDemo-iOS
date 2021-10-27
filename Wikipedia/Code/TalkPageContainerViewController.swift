@@ -160,8 +160,8 @@ class TalkPageContainerViewController: ViewController, HintPresenting {
         
         assert(title.contains(":"), "Title must already be prefixed with namespace.")
         
-        let language = siteURL.wmf_language
-        talkPageSemanticContentAttribute = MWLanguageInfo.semanticContentAttribute(forWMFLanguage: language)
+        let contentLanguageCode = siteURL.wmf_contentLanguageCode
+        talkPageSemanticContentAttribute = MWKLanguageLinkController.semanticContentAttribute(forContentLanguageCode: contentLanguageCode)
 
         super.init()
         
@@ -281,11 +281,11 @@ private extension TalkPageContainerViewController {
     @objc func tappedLanguage(_ sender: UIButton) {
         
         let languagesVC = WMFPreferredLanguagesViewController.preferredLanguagesViewController()
-        languagesVC?.delegate = self
+        languagesVC.delegate = self
         if let themeable = languagesVC as Themeable? {
             themeable.apply(theme: self.theme)
         }
-        present(WMFThemeableNavigationController(rootViewController: languagesVC!, theme: self.theme), animated: true, completion: nil)
+        present(WMFThemeableNavigationController(rootViewController: languagesVC, theme: self.theme), animated: true, completion: nil)
     }
     
     var talkPageURL: URL? {
@@ -471,7 +471,7 @@ private extension TalkPageContainerViewController {
     
     func stringWithLocalizedCurrentSiteLanguageReplacingPlaceholderInString(string: String, fallbackGenericString: String) -> String {
         
-        if let code = siteURL.wmf_language,
+        if let code = siteURL.wmf_languageCode,
             let language = Locale.current.localizedString(forLanguageCode: code) {
             return NSString.localizedStringWithFormat(string as NSString, language) as String
         } else {
@@ -551,8 +551,8 @@ private extension TalkPageContainerViewController {
     
     func changeLanguage(siteURL: URL) {
         controller = TalkPageController(moc: dataStore.viewContext, title: talkPageTitle, siteURL: siteURL, type: type)
-        let language = siteURL.wmf_language
-        talkPageSemanticContentAttribute = MWLanguageInfo.semanticContentAttribute(forWMFLanguage: language)
+        let contentLanguageCode = siteURL.wmf_contentLanguageCode
+        talkPageSemanticContentAttribute = MWKLanguageLinkController.semanticContentAttribute(forContentLanguageCode: contentLanguageCode)
         resetTopicList()
         fetch { [weak self] in
             guard let self = self else {
@@ -758,9 +758,14 @@ extension TalkPageContainerViewController: EmptyViewControllerDelegate {
 
 extension TalkPageContainerViewController: WMFPreferredLanguagesViewControllerDelegate {
     func languagesController(_ controller: WMFLanguagesViewController, didSelectLanguage language: MWKLanguageLink) {
-        let newSiteURL = language.siteURL
-        if siteURL != newSiteURL {
-                siteURL = newSiteURL
+        
+        guard let currentContentLanguageCode = siteURL.wmf_contentLanguageCode else {
+            return
+        }
+        
+        let newContentLanguageCode = language.contentLanguageCode
+        if currentContentLanguageCode != newContentLanguageCode {
+            siteURL = language.siteURL
                 changeLanguage(siteURL: siteURL)
         }
         controller.dismiss(animated: true, completion: nil)

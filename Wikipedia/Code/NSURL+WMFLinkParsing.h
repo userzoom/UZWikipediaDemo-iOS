@@ -16,13 +16,13 @@ extern NSString *const WMFEditPencil;
 + (nullable NSURL *)wmf_wikimediaCommonsURL;
 
 /**
- * Initialize a new URL with the default Site domain -wikipedia.org - and `language`.
+ * Initialize a new URL with the default Site domain -wikipedia.org - and `languageCode`.
  *
- * @param language      An optional Wikimedia language code. Should be ISO 639-x/IETF BCP 47 @see kCFLocaleLanguageCode - for example: `en`.
+ * @param languageCode      An optional Wikimedia language code. Should be ISO 639-x/IETF BCP 47 @see kCFLocaleLanguageCode - for example: `en`.
  *
- * @return A new URL with the default domain and language.
+ * @return A new URL with the default domain and language code.
  **/
-+ (nullable NSURL *)wmf_URLWithDefaultSiteAndlanguage:(nullable NSString *)language;
++ (nullable NSURL *)wmf_URLWithDefaultSiteAndLanguageCode:(nullable NSString *)languageCode;
 
 /// @return A URL with the default domain and the language code returned by @c locale.
 + (nullable NSURL *)wmf_URLWithDefaultSiteAndLocale:(NSLocale *)locale;
@@ -31,26 +31,26 @@ extern NSString *const WMFEditPencil;
 + (nullable NSURL *)wmf_URLWithDefaultSiteAndCurrentLocale;
 
 /**
- * Initialize a new URL with a Wikimedia `domain` and `language`.
+ * Initialize a new URL with a Wikimedia `domain` and `languageCode`.
  *
  * @param domain        Wikimedia domain - for example: `wikimedia.org`.
- * @param language      An optional Wikimedia language code. Should be ISO 639-x/IETF BCP 47 @see kCFLocaleLanguageCode - for example: `en`.
+ * @param languageCode      An optional Wikimedia language code. Should be ISO 639-x/IETF BCP 47 @see kCFLocaleLanguageCode - for example: `en`.
  *
- * @return A new URL with the given domain and language.
+ * @return A new URL with the given domain and language code.
  **/
-+ (nullable NSURL *)wmf_URLWithDomain:(NSString *)domain language:(nullable NSString *)language;
++ (nullable NSURL *)wmf_URLWithDomain:(NSString *)domain languageCode:(nullable NSString *)languageCode;
 
 /**
- * Initialize a new URL with a Wikimedia `domain`, `language`, `title` and `fragment`.
+ * Initialize a new URL with a Wikimedia `domain`, `languageCode`, `title` and `fragment`.
  *
  * @param domain        Wikimedia domain - for example: `wikimedia.org`.
- * @param language      An optional Wikimedia language code. Should be ISO 639-x/IETF BCP 47 @see kCFLocaleLanguageCode - for exmaple: `en`.
+ * @param languageCode  An optional Wikimedia language code. Should be ISO 639-x/IETF BCP 47 @see kCFLocaleLanguageCode - for exmaple: `en`.
  * @param title         An optional Wikimedia title. For exmaple: `Main Page`.
  * @param fragment      An optional fragment, for example if you want the URL to contain `#section`, the fragment is `section`.
  *
- * @return A new URL with the given domain, language, title and fragment.
+ * @return A new URL with the given domain, language code, title and fragment.
  **/
-+ (nullable NSURL *)wmf_URLWithDomain:(NSString *)domain language:(nullable NSString *)language title:(nullable NSString *)title fragment:(nullable NSString *)fragment;
++ (nullable NSURL *)wmf_URLWithDomain:(NSString *)domain languageCode:(nullable NSString *)languageCode title:(nullable NSString *)title fragment:(nullable NSString *)fragment;
 
 /**
  * Return a new URL constructed from the `siteURL`, replacing the `title` and `fragment` with the given values.
@@ -170,7 +170,7 @@ extern NSString *const WMFEditPencil;
 
 @property (nonatomic, copy, readonly, nullable) NSString *wmf_domain;
 
-@property (nonatomic, copy, readonly, nullable) NSString *wmf_language;
+@property (nonatomic, copy, readonly, nullable) NSString *wmf_languageCode;
 
 @property (nonatomic, copy, readonly, nullable) NSString *wmf_pathWithoutWikiPrefix;
 
@@ -181,6 +181,11 @@ extern NSString *const WMFEditPencil;
 @property (nonatomic, copy, readonly, nullable) NSURL *wmf_canonicalURL; // canonical URL
 
 @property (nonatomic, copy, readonly, nullable) NSString *wmf_databaseKey; // string suitable for using as a unique key for any wiki page
+
+/**
+ *  Returns @c wmf_languageVariantCode if non-nil and non-empty string, @c wmf_languageCode otherwise
+ */
+@property (nonatomic, copy, readonly, nullable) NSString *wmf_contentLanguageCode;
 
 #pragma mark - Introspection
 
@@ -210,8 +215,35 @@ extern NSString *const WMFEditPencil;
  *  Settable property for language variant code, defaults to nil
  *  Returns language variant code if present or nil if no code set
  */
-@property (nonatomic, copy, nullable)NSString *wmf_languageVariantCode;
+@property (nonatomic, copy, nullable) NSString *wmf_languageVariantCode;
 
+@end
+
+/**
+ * A number of places in the app need a unique in-memory key for a URL, typically an article URL:
+ * - WMFDataStore maintains a temporary local NSCache of WMFArticle instances.
+ * - ArticleSummary and reading list processing use a unique key for calcualting differences
+ *
+ * The value of wmf_databaseKey derived a URL does not take language variants into account.
+ * This key combines the value of wmf_databaseKey and wmf_languageVariantCode to form a unique key.
+ * This key should be used in instance of NSCache, as keys to dictionaries or other in-memory uses.
+ *
+ * For Core Data entities, the key and variant are maintained as separate properties.
+ * The key value in database entities is the value of wmf_databaseKey.
+*/
+@interface WMFInMemoryURLKey : NSObject
+- (instancetype)initWithDatabaseKey:(NSString *)databaseKey languageVariantCode:(nullable NSString *)languageVariantCode NS_DESIGNATED_INITIALIZER;
+- (nullable instancetype)initWithURL:(NSURL *)url;
+- (instancetype)init NS_UNAVAILABLE;
+- (BOOL)isEqualToInMemoryURLKey:(WMFInMemoryURLKey *)rhs;
+@property (readonly, nonatomic, copy) NSString *databaseKey;
+@property (readonly, nonatomic, copy, nullable) NSString *languageVariantCode;
+@property (readonly, nonatomic, copy, nullable) NSURL *URL;
+@property (readonly, nonatomic, copy) NSString *userInfoString; // A unique string for this database key + variant code pair suitable for incorporation in key strings.
+@end
+
+@interface NSURL (WMFInMemoryURLKeyExtensions)
+@property (readonly, nonatomic, copy, nullable) WMFInMemoryURLKey *wmf_inMemoryKey;
 @end
 
 NS_ASSUME_NONNULL_END

@@ -2,7 +2,7 @@
 #import <WMF/WMFComparison.h>
 #import <WMF/WMFImageURLParsing.h>
 #import <WMF/NSURL+WMFExtras.h>
-#import <WMF/MWLanguageInfo.h>
+#import <WMF/MWKLanguageLinkController.h>
 #import <WMF/UIScreen+WMFImageWidth.h>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -57,7 +57,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (NSValueTransformer *)imageDescriptionIsRTLJSONTransformer {
     return [MTLValueTransformer transformerUsingForwardBlock:^(NSString *lang, BOOL *success, NSError *__autoreleasing *error) {
-        return @(lang && [[MWLanguageInfo rtlLanguages] containsObject:lang]);
+        // The image description service returns a language but not a language variant code.
+        // The language variant in the request is currenty not taken into account in the response.
+        // So using the language code is correct in this case.
+        return @([MWKLanguageLinkController isLanguageRTLForContentLanguageCode:lang]);
     }];
 }
 
@@ -94,6 +97,12 @@ NS_ASSUME_NONNULL_BEGIN
     NSString *adjustedString = WMFChangeImageSourceURLSizePrefix(self.imageThumbURL.absoluteString, thumbnailBucketSize);
     NSURL *adjustedURL = [NSURL URLWithString:adjustedString];
     return adjustedURL ?: self.imageThumbURL ?: self.imageURL;
+}
+
+// No languageVariantCodePropagationSubelementKeys
+
++ (NSArray<NSString *> *)languageVariantCodePropagationURLKeys {
+    return @[@"imageThumbURL", @"imageURL"];
 }
 
 @end

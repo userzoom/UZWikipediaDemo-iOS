@@ -97,7 +97,7 @@ class EditLinkViewController: ViewController {
 
     private func fetchArticle() {
         guard let article = dataStore.fetchArticle(with: articleURL) else {
-            guard let key = articleURL.wmf_databaseKey else {
+            guard let key = articleURL.wmf_inMemoryKey else {
                 return
             }
             dataStore.articleSummaryController.updateOrCreateArticleSummaryForArticle(withKey: key) { (article, _) in
@@ -167,11 +167,12 @@ class EditLinkViewController: ViewController {
     @IBAction private func searchArticles(_ sender: UITapGestureRecognizer) {
         let searchViewController = SearchViewController()
         searchViewController.shouldSetTitleViewWhenRecentSearchesAreDisabled = false
+        searchViewController.shouldAdjustNavigationBarInsetHidingOnAppearance = false
         searchViewController.siteURL = siteURL
         searchViewController.shouldSetSearchVisible = false
         searchViewController.shouldBecomeFirstResponder = true
         searchViewController.displayType = .backVisible
-        searchViewController.areRecentSearchesEnabled = false
+        searchViewController.areRecentSearchesEnabled = true
         searchViewController.dataStore = MWKDataStore.shared()
         searchViewController.shouldShowCancelButton = false
         searchViewController.delegate = self

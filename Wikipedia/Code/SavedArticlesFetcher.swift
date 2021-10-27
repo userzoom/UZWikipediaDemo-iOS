@@ -176,21 +176,21 @@ private extension SavedArticlesFetcher {
             
             articleCacheController.add(url: articleURL, groupKey: articleKey, individualCompletion: { (itemResult) in
                 switch itemResult {
-                case .success(let itemKey):
-                    DDLogDebug("🥶successfully added \(itemKey)")
+                case .success:
+                    break
                 case .failure(let error):
-                    DDLogDebug("🥶failure in itemCompletion of \(articleKey): \(error)")
+                    DDLogError("Failed saving an item for \(articleKey): \(error)")
                 }
             }) { (groupResult) in
                 DispatchQueue.main.async {
                     switch groupResult {
                     case .success(let itemKeys):
-                        DDLogDebug("🥶group completion: \(articleKey), itemKeyCount: \(itemKeys.count)")
+                        DDLogInfo("Successfully saved all items for \(articleKey), itemKeyCount: \(itemKeys.count)")
                         self.didFetchArticle(with: articleObjectID)
                         self.spotlightManager.addToIndex(url: articleURL as NSURL)
                         self.updateCountOfFetchesInProcess()
                     case .failure(let error):
-                        DDLogDebug("🥶failure in groupCompletion of \(articleKey): \(error)")
+                        DDLogError("Failed saving items for \(articleKey): \(error)")
                         self.updateCountOfFetchesInProcess()
                         self.didFailToFetchArticle(with: articleObjectID, error: error)
                     }
@@ -218,7 +218,8 @@ private extension SavedArticlesFetcher {
             
             if let articleToDelete = articleToDelete {
                 
-                guard let articleKey = articleToDelete.key else {
+                guard let articleKey = articleToDelete.key,
+                      let articleURL = articleToDelete.url else {
                     noArticleToDeleteCompletion()
                     return
                 }
@@ -227,18 +228,19 @@ private extension SavedArticlesFetcher {
                 
                 articleCacheController.remove(groupKey: articleKey, individualCompletion: { (itemResult) in
                     switch itemResult {
-                    case .success(let itemKey):
-                        DDLogDebug("🙈successfully removed \(itemKey)")
+                    case .success:
+                        break
                     case .failure(let error):
-                        DDLogDebug("🙈failure in itemCompletion of \(articleKey): \(error)")
+                        DDLogError("Failed removing item for \(articleKey): \(error)")
                     }
                 }) { (groupResult) in
                     DispatchQueue.main.async {
                         switch groupResult {
                         case .success:
-                            DDLogDebug("🙈success in groupCompletion of \(articleKey)")
+                            DDLogInfo("Successfully removed all items for \(articleKey)")
+                            self.spotlightManager.removeFromIndex(url: articleURL as NSURL)
                         case .failure(let error):
-                            DDLogDebug("🙈failure in groupCompletion of \(articleKey): \(error)")
+                            DDLogError("Failed removing items for \(articleKey): \(error)")
                             break
                         }
                         // Ignoring failures to ensure the DB doesn't get stuck trying

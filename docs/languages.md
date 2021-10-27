@@ -5,7 +5,7 @@ Inside the main project, there's a `languages` target that is a Mac command line
 When translations for a new language are added to the app:
 1. Run the `Update Languages` scheme in XCode. This will create all of the needed config files for any new Wikipedia languages detected.
 2. If the new language is not seen in the `Localizable.strings` and/or `Localizable.stringsdict` files, the actual language files may need to be added to the XCode project manually. Select the `Localizable.strings` file in the the Project Navigator, then `File` -> `Add Files to Wikipedia`. Select all the files in the `Wikipedia/iOS Native Localizations/[lang code].lproj` folder (`Localizable.strings`, `Localizable.stringsdict`, and/or `InfoPlist.strings`). Add them only to the `WMF` target. (Ideally this step can be incoporated into the script run in the first step, but given how rarely new languages are added, for the time being this is manual.) 
-3. If the new language is still not seen in both the `Localizable.strings` and `Localizable.stringsdict` files, add an `InfoPlist.string` file in the language's folder with the line `"CFBundleDisplayName" = "Wikipedia";`. Add this file to the project (see step 2).  
+3. If the new language is still not seen when running the app, add an `InfoPlist.string` file in the language's folder (within `iOS Native Localizations`) with the line `"CFBundleDisplayName" = "Wikipedia";`. Add this file to the project (see step 2).  
 4. Submit a PR with the changes. 
 
 ### Updating language variants
@@ -24,7 +24,7 @@ For a language that has not had language variants before, add a new top-level ke
 _Troubleshooting: Variants missing from this file will not appear in the user's choices of langugages._ 
 
 #### Language variant mapping file
-During onboarding, the app uses the user's OS langauge preferences to suggest the primary app language. If the language is one with variants, the variant specified by the user should be used.
+During onboarding, the app uses the user's OS langauge preferences to suggest the preferred languages for Wikipedia content. If the language is one with variants, the variant specified by the user should be used.
 
 However, the codes used by the OS to represent variants is different than the codes used by Wikipedia sites. The mapping from OS Locale for a given language to the Wikipedia language variant code is defined in the  `MediaWikiAcceptLanguageMapping.json` file.
 
@@ -35,6 +35,39 @@ When adding a new variant, the correct mapping from the OS language / Locale to 
 _Troubleshooting: Variants missing from this file cause onboarding to fail to identify a variant to suggest to the user ._ 
 
 Note: Historically this mapping file was used to determine the user's language variant preference in Chinese and Serbian based on the user's OS language settings. The new language variant feature allows the user to choose variants explicitly.
+
+#### Locale to language variant mapping details
+A locale identifier in the OS can include:
+
+- A language identifier on its own. For example: "zh" for _Chinese_.
+
+- Language and script identifiers. For example: "sr_Cyrl" for _Serbian, Cryillic_; "sr_Latn" for _Serbian, Latin_
+
+- Language, script, and region identifiers. For example: "zh_Hant_TW" for _Taiwanese, Traditional_; "zh_Hans_HK" for _Hong Kong, Simplified_
+
+In Chinese, the region affects the Wikipedia langauge variant. So, the mapping file specifies regions in the most deeply nested dictionary.
+
+In all other languages with variants so far, the script identifier is enough to identify the variant, and does not change regardless of region.
+For these languages, only the "default" key is present in the region dictionary.
+
+#### Other Locale to language variant mapping notes:
+
+These notes are valid as of iOS 14.4
+
+Not all scripts/variants supported by a particular Wikipedia language are available identifiers in the OS.
+In these cases, finding the language in the user's OS preferences implies a particular language variant.
+
+Gan "gan" and Crimean Tatar "crh" do not appear as available locale identifiers in the OS, although their scripts are. A default language variant value is provided in case a future OS includes these locale identifiers.
+
+The OS does include locale identifiers for Kurdish "ku", but it does not seem to be a choice for users in language settings. Language variants for these identifiers is specified in the mapping although it does not currently seem to be selectable by the user.
+
+Note that in Uzbek, the OS supports an Arabic variant of the language which is not present as a language variant for the Uzbek Wikipedia. In this case, the variant falls back to Latin, which is the most prevalent script in the untransformed articles on the Uzbek site.
+
+
+
+
+
+
 
 
 

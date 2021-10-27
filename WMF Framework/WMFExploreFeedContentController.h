@@ -83,7 +83,7 @@ extern const NSInteger WMFExploreFeedMaximumNumberOfDays;
  @return A set of language codes representing languages in which a given content group kind is visible in the feed.
  If a given content group kind is not visible in any languages, the set will be empty.
  */
-- (NSArray<NSString *> *_Nonnull)languageCodesForContentGroupKind:(WMFContentGroupKind)contentGroupKind;
+- (NSArray<NSString *> *_Nonnull)contentLanguageCodesForContentGroupKind:(WMFContentGroupKind)contentGroupKind;
 
 /**
  Returns a flag indicating whether there are any customizable content groups visible in the feed for a given siteURL.
@@ -112,13 +112,15 @@ extern const NSInteger WMFExploreFeedMaximumNumberOfDays;
 
 - (void)dismissCollapsedContentGroups;
 
-#if WMF_TWEAKS_ENABLED
-- (void)debugSendRandomInTheNewsNotification;
-#endif
 #if DEBUG
 - (void)debugChaos;
 #endif
 
+@end
+
+@interface WMFExploreFeedContentController (LanguageVariantMigration)
+/// The expected dictionary uses language codes as the key with the value being the desired language variant code for that language.
+- (void)migrateExploreFeedSettingsToLanguageVariants:(NSDictionary<NSString *, NSString *> *)languageMapping inManagedObjectContext:(NSManagedObjectContext *)moc;
 @end
 
 NS_ASSUME_NONNULL_END

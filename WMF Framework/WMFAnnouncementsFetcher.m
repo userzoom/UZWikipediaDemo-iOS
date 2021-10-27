@@ -13,11 +13,7 @@
         return;
     }
     
-#if WMF_LOCAL_ANNOUNCEMENTS
-    NSURL *url = [[WMFConfiguration.localWikiFeeds wikiFeedsAPIURLComponentsForHost:siteURL.host appendingPathComponents:@[@"feed", @"announcements"]] URL];
-#else
-    NSURL *url = [[self.configuration wikiFeedsAPIURLComponentsForHost:siteURL.host appendingPathComponents:@[@"feed", @"announcements"]] URL];
-#endif
+    NSURL *url = [self.configuration announcementsAPIURLForURL:siteURL appendingPathComponents:@[@"feed", @"announcements"]];
     [self.session getJSONDictionaryFromURL:url ignoreCache:YES completionHandler:^(NSDictionary<NSString *,id> * _Nullable result, NSHTTPURLResponse * _Nullable response, NSError * _Nullable error) {
         if (error) {
             failure(error);
@@ -30,7 +26,7 @@
         }
         
         NSError *serializerError = nil;
-        NSArray *announcements = [WMFLegacySerializer modelsOfClass:[WMFAnnouncement class] fromArrayForKeyPath:@"announce" inJSONDictionary:result error:&serializerError];
+        NSArray *announcements = [WMFLegacySerializer modelsOfClass:[WMFAnnouncement class] fromArrayForKeyPath:@"announce" inJSONDictionary:result languageVariantCode:url.wmf_languageVariantCode error:&serializerError];
         if (serializerError) {
             failure(serializerError);
             return;
@@ -79,7 +75,7 @@
         if (![obj isKindOfClass:[WMFAnnouncement class]]) {
             return NO;
         }
-        if ([obj.platforms containsObject:@"iOSAppV4"]) {
+        if ([obj.platforms containsObject:@"iOSAppV5"]) {
             return YES;
         } else {
             return NO;

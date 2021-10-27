@@ -104,6 +104,11 @@ __attribute__((annotate("returns_localized_nsstring"))) static inline NSString *
     return activity;
 }
 
++ (instancetype)wmf_languageSettingsActivity {
+    NSUserActivity *activity = [self wmf_pageActivityWithName:@"LanguageSettings"];
+    return activity;
+}
+
 + (nullable instancetype)wmf_activityForWikipediaScheme:(NSURL *)url {
     if (![url.scheme isEqualToString:@"wikipedia"] && ![url.scheme isEqualToString:@"wikipedia-official"]) {
         return nil;
